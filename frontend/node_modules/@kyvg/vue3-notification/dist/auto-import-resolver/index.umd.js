@@ -1,0 +1,1 @@
+(function(o,e){typeof exports=="object"&&typeof module<"u"?module.exports=e():typeof define=="function"&&define.amd?define(e):(o=typeof globalThis<"u"?globalThis:o||self,o.resolver=e())})(this,function(){"use strict";const o="@kyvg/vue3-notification",e="Notifications";return(t=e)=>n=>{if(t===n)return{from:o,as:t,name:e}}});

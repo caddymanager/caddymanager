@@ -1,0 +1,1 @@
+{"admin":{"listen":"0.0.0.0:2019"},"apps":{"http":{"servers":{"load_balancer":{"listen":[":80"],"routes":[{"handle":[{"handler":"reverse_proxy","load_balancing":{"selection_policy":{"policy":"round_robin"}},"upstreams":[{"dial":"backend1:8080"},{"dial":"backend2:8080"},{"dial":"backend3:8080"}]}],"match":[{"host":["test-lb.com"]}],"terminal":true}]}}}}}

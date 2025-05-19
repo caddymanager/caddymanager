@@ -1,0 +1,86 @@
+{
+  "id": "basic-web",
+  "name": "Basic Web Server",
+  "description": "Simple web server configuration with file server support",
+  "complexity": "simple",
+  "category": "http",
+  "icon": "GlobeAltIcon",
+  "form": {
+    "sections": [
+      {
+        "title": "Server Configuration",
+        "fields": [
+          {
+            "id": "host",
+            "label": "Hostname",
+            "type": "text",
+            "placeholder": "example.com",
+            "description": "Domain name for this server (optional)",
+            "required": false
+          },
+          {
+            "id": "listen",
+            "label": "Listen Address",
+            "type": "text",
+            "placeholder": ":80",
+            "description": "Port to listen on, e.g. :80 or :443",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Content Settings",
+        "fields": [
+          {
+            "id": "rootDir",
+            "label": "Root Directory",
+            "type": "text",
+            "placeholder": "/var/www/html",
+            "description": "Directory containing website files",
+            "required": true
+          },
+          {
+            "id": "indexFiles",
+            "label": "Index Files",
+            "type": "text",
+            "placeholder": "index.html,index.htm",
+            "description": "Comma-separated list of index file names",
+            "required": false
+          },
+          {
+            "id": "enableBrowse",
+            "label": "Enable Directory Listing",
+            "type": "toggle",
+            "description": "Allow browsing of directory contents",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "myserver": {
+            "listen": [":80"],
+            "routes": [
+              {
+                "handle": [
+                  {
+                    "handler": "file_server",
+                    "root": "/var/www/html",
+                    "index_names": ["index.html", "index.htm"]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

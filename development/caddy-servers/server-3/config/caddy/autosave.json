@@ -1,0 +1,1 @@
+{"admin":{"listen":"0.0.0.0:2021"},"apps":{"http":{"servers":{"srv0":{"listen":[":80"],"routes":[{"handle":[{"body":"Hello from Caddy Server #3 running on container port 80 (host port 8002) with admin API on port 2021","handler":"static_response"}]}]}}}}}

@@ -1,0 +1,41 @@
+{
+    # Global options
+    admin 0.0.0.0:2020
+    
+    # Enable debugging
+    debug
+}
+
+# HTTP Server with restricted API access
+:8080 {
+    # Block access to all admin API endpoints except /adapt
+    @blocked_admin_paths {
+        path /config* /id* /reverse_proxy* /metrics* /load* /stop*
+        not method POST
+    }
+    
+    handle @blocked_admin_paths {
+        respond 403
+    }
+    
+    # Allow POST /adapt endpoint for file conversion
+    @allow_adapt {
+        path /adapt
+        method POST
+    }
+    
+    handle @allow_adapt {
+        # Pass requests to the admin API
+        reverse_proxy http://localhost:2020
+    }
+    
+    # Root handler with simple info page
+    handle / {
+        respond "Caddy Sandbox Server - Only the POST /adapt endpoint is publicly accessible."
+    }
+    
+    # Default handler for all other paths
+    handle {
+        respond 404
+    }
+}

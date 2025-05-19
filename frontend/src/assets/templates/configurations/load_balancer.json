@@ -1,0 +1,136 @@
+{
+  "id": "load-balancer",
+  "name": "Load Balancer",
+  "description": "Balance traffic across multiple backend servers",
+  "complexity": "advanced",
+  "category": "loadBalancing",
+  "icon": "ServerStackIcon",
+  "form": {
+    "sections": [
+      {
+        "title": "Load Balancer Configuration",
+        "fields": [
+          {
+            "id": "host",
+            "label": "Hostname",
+            "type": "text",
+            "placeholder": "example.com",
+            "description": "Domain name for load balancer",
+            "required": true
+          },
+          {
+            "id": "listen",
+            "label": "Listen Address",
+            "type": "text",
+            "placeholder": ":80",
+            "description": "Port to listen on, e.g. :80 or :443",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Backend Servers",
+        "fields": [
+          {
+            "id": "backends",
+            "label": "Backend Servers",
+            "type": "textarea",
+            "placeholder": "backend1:8080\nbackend2:8080\nbackend3:8080",
+            "description": "Enter one backend server per line",
+            "required": true
+          },
+          {
+            "id": "lbPolicy",
+            "label": "Load Balancing Policy",
+            "type": "select",
+            "options": [
+              { "label": "Round Robin", "value": "round_robin" },
+              { "label": "Least Connections", "value": "least_conn" },
+              { "label": "IP Hash", "value": "ip_hash" },
+              { "label": "Random", "value": "random" },
+              { "label": "Header Hash", "value": "header" }
+            ],
+            "description": "Algorithm for distributing requests",
+            "required": true,
+            "default": "round_robin"
+          }
+        ]
+      },
+      {
+        "title": "Health Checks",
+        "fields": [
+          {
+            "id": "enableHealthChecks",
+            "label": "Enable Health Checks",
+            "type": "toggle",
+            "description": "Monitor backend health status",
+            "required": false
+          },
+          {
+            "id": "healthCheckPath",
+            "label": "Health Check Path",
+            "type": "text",
+            "placeholder": "/health",
+            "description": "Path used for health checking",
+            "required": false,
+            "conditional": {
+              "field": "enableHealthChecks",
+              "value": true
+            }
+          },
+          {
+            "id": "healthCheckInterval",
+            "label": "Health Check Interval",
+            "type": "text",
+            "placeholder": "30s",
+            "description": "Time between health checks",
+            "required": false,
+            "conditional": {
+              "field": "enableHealthChecks",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "load_balancer": {
+            "listen": [":80"],
+            "routes": [
+              {
+                "match": [
+                  {
+                    "host": ["example.com"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                      { "dial": "backend1:8080" },
+                      { "dial": "backend2:8080" },
+                      { "dial": "backend3:8080" }
+                    ],
+                    "load_balancing": {
+                      "selection_policy": {
+                        "policy": "round_robin"
+                      }
+                    }
+                  }
+                ],
+                "terminal": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
