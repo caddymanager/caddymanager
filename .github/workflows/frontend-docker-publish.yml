@@ -31,7 +31,12 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (frontend)
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm install
+          fi
         working-directory: frontend
 
       - name: Generate build information
