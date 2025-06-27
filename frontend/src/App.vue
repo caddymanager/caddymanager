@@ -6,7 +6,7 @@ import LoadingSpinnerComp from './components/util/loadingSpinnerComp.vue'
 import { useCaddyServersStore } from './stores/caddyServersStore'
 import { useCaddyConfigsStore } from './stores/caddyConfigsStore'
 import { useThemeStore } from './stores/themeStore'
-import config from './services/configService'
+import config, { loadConfig } from './services/configService'
 
 // Loading state that starts as true
 const isLoading = ref(true)
@@ -32,6 +32,8 @@ const themeStore = useThemeStore()
 // Initialize application
 const initializeApp = async () => {
   try {
+    // Load dynamic config first
+    await loadConfig()
     console.log(`Initializing ${config.APP.TITLE} from App.vue...`)
     
     // Fetch initial data
