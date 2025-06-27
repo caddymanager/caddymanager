@@ -1,0 +1,17 @@
+:80 {
+    handle /config {
+        header Content-Type "application/json"
+        respond `{
+            "api_base_url": "{$API_BASE_URL}",
+            "app_name": "{$APP_NAME}",
+            "enable_dark_mode": "{$DARK_MODE}"
+        }`
+    }
+
+    handle {
+        root * /usr/share/caddy
+        try_files {path} /index.html
+        encode gzip
+        file_server
+    }
+}
