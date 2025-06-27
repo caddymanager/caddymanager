@@ -10,11 +10,13 @@ export async function loadConfig() {
   try {
     // Use window.location.origin to get the frontend base URL
     const configUrl = window.location.origin + '/config'
+    console.log('[configService] Fetching config from', configUrl)
     const res = await fetch(configUrl)
     if (!res.ok) throw new Error('Failed to load ' + configUrl)
     runtimeConfig = await res.json()
+    console.log('[configService] Loaded config:', runtimeConfig)
   } catch (e) {
-    // If /config fails, runtimeConfig remains null and env vars will be used
+    console.warn('[configService] Failed to load /config, falling back to env vars:', e)
     runtimeConfig = null
   }
 }
