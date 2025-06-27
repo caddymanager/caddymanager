@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Build and Publish Backend Docker Image
 
 on:
   push:
@@ -11,10 +11,10 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  build-and-push:
+  build-and-push-backend:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,8 +29,9 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (backend)
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci
@@ -46,13 +47,9 @@ jobs:
       - name: Generate build metadata
         id: build-meta
         run: |
-          # Generate build number
           BUILD_NUMBER="${{ github.run_number }}"
-          
-          # Get commit range for changelog
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-              # First commit on branch
               COMMIT_RANGE="${{ github.sha }}"
             else
               COMMIT_RANGE="${{ github.event.before }}..${{ github.sha }}"
@@ -60,26 +57,21 @@ jobs:
           else
             COMMIT_RANGE="${{ github.sha }}"
           fi
-          
           echo "build-number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "commit-range=$COMMIT_RANGE" >> $GITHUB_OUTPUT
           echo "build-date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
-          echo "commit-sha=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+          echo "build-sha=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+        working-directory: backend
 
       - name: Generate changelog and features
         id: changelog
         run: |
-          # Create changelog from commits
-          echo "## Changes in this build" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          
-          # Get commits and categorize them
+          echo "## Changes in this build" > backend/CHANGELOG.md
+          echo "" >> backend/CHANGELOG.md
           FEATURES=""
           FIXES=""
           BREAKING=""
           OTHER=""
-          
-          # Process commits
           git log --pretty=format:"%s (%h)" ${{ steps.build-meta.outputs.commit-range }} | while read -r line; do
             if [[ $line =~ ^feat(\(.*\))?!: ]]; then
               echo "- 🚨 **BREAKING:** ${line#*: }" >> breaking.tmp
@@ -93,45 +85,33 @@ jobs:
               echo "- 📝 $line" >> other.tmp
             fi
           done
-          
-          # Build changelog sections
           if [ -f breaking.tmp ]; then
-            echo "### 🚨 Breaking Changes" >> CHANGELOG.md
-            cat breaking.tmp >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
+            echo "### 🚨 Breaking Changes" >> backend/CHANGELOG.md
+            cat breaking.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f features.tmp ]; then
-            echo "### ✨ New Features" >> CHANGELOG.md
-            cat features.tmp >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
+            echo "### ✨ New Features" >> backend/CHANGELOG.md
+            cat features.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f fixes.tmp ]; then
-            echo "### 🐛 Bug Fixes" >> CHANGELOG.md
-            cat fixes.tmp >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
+            echo "### 🐛 Bug Fixes" >> backend/CHANGELOG.md
+            cat fixes.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f other.tmp ]; then
-            echo "### 🔧 Other Changes" >> CHANGELOG.md
-            cat other.tmp >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
+            echo "### 🔧 Other Changes" >> backend/CHANGELOG.md
+            cat other.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
-          # Count features for summary
           FEATURE_COUNT=$([ -f features.tmp ] && wc -l < features.tmp || echo "0")
           FIX_COUNT=$([ -f fixes.tmp ] && wc -l < fixes.tmp || echo "0")
-          
           echo "feature-count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
           echo "fix-count=$FIX_COUNT" >> $GITHUB_OUTPUT
-          
-          # Clean up temp files
           rm -f features.tmp fixes.tmp breaking.tmp other.tmp
-          
-          # Display changelog
           echo "Generated changelog:"
-          cat CHANGELOG.md
+          cat backend/CHANGELOG.md
 
       - name: Get package version
         id: package-version
@@ -142,7 +122,7 @@ jobs:
 
       - name: Set lowercase image name
         run: |
-          echo "DOCKER_IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_NAME=$(echo ${{ github.repository }}-backend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -167,7 +147,7 @@ jobs:
             type=raw,value=${{ github.ref_name }}-rc.build-${{ steps.build-meta.outputs.build-number }},enable=${{ startsWith(github.ref, 'refs/heads/release/') }}
             type=sha
           labels: |
-            org.opencontainers.image.title=${{ github.repository }}
+            org.opencontainers.image.title=${{ github.repository }}-backend
             org.opencontainers.image.description=Caddy Manager Backend
             org.opencontainers.image.version=${{ steps.package-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -179,7 +159,7 @@ jobs:
             caddymanager.build.fixes=${{ steps.changelog.outputs.fix-count }}
             caddymanager.build.workflow-run=${{ github.run_id }}
 
-      - name: Build and push final image
+      - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -199,7 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: changelog-build-${{ steps.build-meta.outputs.build-number }}
-          path: CHANGELOG.md
+          path: backend/CHANGELOG.md
           retention-days: 30
 
       - name: Build Summary
@@ -214,4 +194,4 @@ jobs:
           echo "- **Bugs Fixed:** ${{ steps.changelog.outputs.fix-count }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 Full Changelog" >> $GITHUB_STEP_SUMMARY
-          cat CHANGELOG.md >> $GITHUB_STEP_SUMMARY
+          cat backend/CHANGELOG.md >> $GITHUB_STEP_SUMMARY
