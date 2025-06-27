@@ -1,15 +1,17 @@
 /**
  * Configuration service for accessing environment variables and dynamic /config endpoint
- * Loads /config at runtime and falls back to environment variables if not present
+ * Loads <frontend base url>/config at runtime and falls back to environment variables if not present
  */
 
 let runtimeConfig = null
 
-// Loads /config and populates runtimeConfig
+// Loads <frontend base url>/config and populates runtimeConfig
 export async function loadConfig() {
   try {
-    const res = await fetch('/config')
-    if (!res.ok) throw new Error('Failed to load /config')
+    // Use window.location.origin to get the frontend base URL
+    const configUrl = window.location.origin + '/config'
+    const res = await fetch(configUrl)
+    if (!res.ok) throw new Error('Failed to load ' + configUrl)
     runtimeConfig = await res.json()
   } catch (e) {
     // If /config fails, runtimeConfig remains null and env vars will be used
