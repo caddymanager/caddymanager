@@ -28,7 +28,7 @@ RUN npm ci
 COPY --chown=node:node . .
 
 # Generate build info with passed environment variables and ensure it completes
-RUN node src/scripts/generateBuildInfo.js && \
+RUN node scripts/generateBuildInfo.js && \
     echo "Verifying build info files exist:" && \
     ls -la src/build-info.* || echo "No build-info files found"
 
