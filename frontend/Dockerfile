@@ -21,10 +21,6 @@ RUN npm install
 # Copy source files
 COPY . .
 
-# Ensure config directories exist and generate configs
-RUN mkdir -p src/config && \
-    npm run generate-config
-
 # Generate build info with passed environment variables
 RUN node scripts/generateBuildInfo.js
 
