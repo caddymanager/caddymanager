@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "generate-build-info": "node scripts/generateBuildInfo.js",
+    "prestart": "npm run generate-build-info",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

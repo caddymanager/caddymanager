@@ -4,6 +4,7 @@ const convertRoutes = require('./convertRoutes');
 const authRoutes = require('./authRoutes');
 const apiKeyRoutes = require('./apiKeyRoutes');
 const auditLogRoutes = require('./auditLogRoutes');
+const buildInfoRoutes = require('./buildInfoRoutes');
 
 const router = express.Router();
 
@@ -45,6 +46,9 @@ router.use(`${API_PREFIX}/apikeys`, apiKeyRoutes);
 
 // Mount Audit Log routes
 router.use(`${API_PREFIX}/audit-logs`, auditLogRoutes);
+
+// Mount Build Info routes
+router.use(`${API_PREFIX}/build-info`, buildInfoRoutes);
 
 /**
  * @swagger

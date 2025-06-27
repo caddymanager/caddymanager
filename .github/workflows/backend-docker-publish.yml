@@ -29,27 +29,19 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies (frontend)
+      - name: Install dependencies
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci
           else
             npm install
           fi
-        working-directory: frontend
+        working-directory: backend
 
       - name: Generate build information
         run: node scripts/generateBuildInfo.js
-        working-directory: frontend
-
-      - name: Get package version
-        id: package-version
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "version=$version" >> $GITHUB_OUTPUT
-        working-directory: frontend
+        working-directory: backend
 
       - name: Generate build metadata
         id: build-meta
@@ -78,8 +70,8 @@ jobs:
         id: changelog
         run: |
           # Create changelog from commits
-          echo "## Changes in this build" > frontend/CHANGELOG.md
-          echo "" >> frontend/CHANGELOG.md
+          echo "## Changes in this build" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
           
           # Get commits and categorize them
           FEATURES=""
@@ -104,27 +96,27 @@ jobs:
           
           # Build changelog sections
           if [ -f breaking.tmp ]; then
-            echo "### 🚨 Breaking Changes" >> frontend/CHANGELOG.md
-            cat breaking.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🚨 Breaking Changes" >> CHANGELOG.md
+            cat breaking.tmp >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
           fi
           
           if [ -f features.tmp ]; then
-            echo "### ✨ New Features" >> frontend/CHANGELOG.md
-            cat features.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### ✨ New Features" >> CHANGELOG.md
+            cat features.tmp >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
           fi
           
           if [ -f fixes.tmp ]; then
-            echo "### 🐛 Bug Fixes" >> frontend/CHANGELOG.md
-            cat fixes.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🐛 Bug Fixes" >> CHANGELOG.md
+            cat fixes.tmp >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
           fi
           
           if [ -f other.tmp ]; then
-            echo "### 🔧 Other Changes" >> frontend/CHANGELOG.md
-            cat other.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🔧 Other Changes" >> CHANGELOG.md
+            cat other.tmp >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
           fi
           
           # Count features for summary
@@ -139,7 +131,14 @@ jobs:
           
           # Display changelog
           echo "Generated changelog:"
-          cat frontend/CHANGELOG.md
+          cat CHANGELOG.md
+
+      - name: Get package version
+        id: package-version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
+        working-directory: backend
 
       - name: Set lowercase image name
         run: |
@@ -169,7 +168,7 @@ jobs:
             type=sha
           labels: |
             org.opencontainers.image.title=${{ github.repository }}
-            org.opencontainers.image.description=Caddy Manager Frontend
+            org.opencontainers.image.description=Caddy Manager Backend
             org.opencontainers.image.version=${{ steps.package-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.build-meta.outputs.build-date }}
@@ -183,7 +182,7 @@ jobs:
       - name: Build and push final image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./backend
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -200,7 +199,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: changelog-build-${{ steps.build-meta.outputs.build-number }}
-          path: frontend/CHANGELOG.md
+          path: CHANGELOG.md
           retention-days: 30
 
       - name: Build Summary
@@ -215,4 +214,4 @@ jobs:
           echo "- **Bugs Fixed:** ${{ steps.changelog.outputs.fix-count }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 Full Changelog" >> $GITHUB_STEP_SUMMARY
-          cat frontend/CHANGELOG.md >> $GITHUB_STEP_SUMMARY
+          cat CHANGELOG.md >> $GITHUB_STEP_SUMMARY
