@@ -58,6 +58,29 @@ Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack
 
 ---
 
+## 🧩 Environment Variables
+
+### Frontend
+- `API_BASE_URL`
+- `APP_NAME`
+- `DARK_MODE`
+
+### Backend
+- `PORT`
+- `NODE_ENV`
+- `MONGODB_URI`
+- `CORS_ORIGIN`
+- `LOG_LEVEL`
+- `DEFAULT_CADDY_ADMIN_USER`
+- `DEFAULT_CADDY_ADMIN_PASSWORD`
+- `CADDY_SANDBOX_URL`
+- `PING_INTERVAL`
+- `PING_TIMEOUT`
+- `AUDIT_LOG_MAX_SIZE_MB`
+- `AUDIT_LOG_RETENTION_DAYS`
+
+---
+
 ## 📚 Documentation
 - [Caddy Documentation](https://caddyserver.com/docs/)
 - [Swagger API Docs](http://localhost:3000/api-docs) (after starting backend)
@@ -76,3 +99,50 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 📢 Status
 This project is in active development, gearing up for a v0.1 release. Feedback and testing are appreciated!
+
+---
+
+## 🐳 Docker Compose Example
+
+Below is a sample `docker-compose.yml` for running both backend and frontend. Instead of referencing `.env` files, environment variables are listed explicitly for clarity:
+
+```yaml
+services:
+  backend:
+    image: ghcr.io/caddymanager/caddymanager-backend:stable
+    container_name: caddymanager-backend
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGODB_URI=
+      - CORS_ORIGIN=http://localhost:5173
+      - LOG_LEVEL=debug
+      - DEFAULT_CADDY_ADMIN_USER=admin
+      - DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
+      - CADDY_SANDBOX_URL=http://localhost:2019
+      - PING_INTERVAL=30000
+      - PING_TIMEOUT=2000
+      - AUDIT_LOG_MAX_SIZE_MB=100
+      - AUDIT_LOG_RETENTION_DAYS=90
+    ports:
+      - "3000:3000"
+    networks:
+      - caddymanager
+
+  frontend:
+    image: ghcr.io/caddymanager/caddymanager-frontend:stable
+    container_name: caddymanager-frontend
+    restart: unless-stopped
+    environment:
+      - API_BASE_URL=http://localhost:3000/api/v1
+      - APP_NAME=Caddy Manager
+      - DARK_MODE=true
+    ports:
+      - "80:80"
+    networks:
+      - caddymanager
+
+networks:
+  caddymanager:
+    driver: bridge
+```

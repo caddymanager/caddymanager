@@ -193,6 +193,9 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             GIT_BRANCH=${{ github.ref_name }}
             BUILD_DATE=${{ steps.build-meta.outputs.build-date }}
+            API_BASE_URL=http://localhost:3000/api/v1
+            APP_NAME=Caddy Manager
+            DARK_MODE=true
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4

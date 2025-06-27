@@ -174,6 +174,17 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             GIT_BRANCH=${{ github.ref_name }}
             BUILD_DATE=${{ steps.build-meta.outputs.build-date }}
+            PORT=3000
+            MONGODB_URI=
+            CORS_ORIGIN=http://localhost:5173
+            LOG_LEVEL=debug
+            DEFAULT_CADDY_ADMIN_USER=admin
+            DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
+            CADDY_SANDBOX_URL=http://localhost:2019
+            PING_INTERVAL=30000
+            PING_TIMEOUT=2000
+            AUDIT_LOG_MAX_SIZE_MB=100
+            AUDIT_LOG_RETENTION_DAYS=90
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4
