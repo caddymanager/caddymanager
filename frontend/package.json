@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "generate-build-info": "node scripts/generateBuildInfo.js",
+    "prebuild": "npm run generate-build-info",
     "build": "vite build",
     "preview": "vite preview"
   },

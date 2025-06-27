@@ -1,6 +1,6 @@
 <script setup>
 import PageTitleComp from '@/components/util/pageTitleComp.vue'
-
+import BuildInfoComp from '@/components/dashboard/buildInfoComp.vue'
 </script>
 
 <template>
@@ -11,5 +11,6 @@ import PageTitleComp from '@/components/util/pageTitleComp.vue'
         { name: 'Home', path: '/' }
       ]"
     />
+    <BuildInfoComp />
   </main>
 </template>
