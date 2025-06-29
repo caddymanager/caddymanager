@@ -2,6 +2,9 @@
 
 Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack (MongoDB, Express, Vue, Node.js).
 
+> **Caution:** CaddyManager is in early development. Please _backup your Caddy configurations_ and data before testing. Use at your own risk.
+
+
 ---
 
 ## 🚀 Features
