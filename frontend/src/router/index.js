@@ -139,6 +139,15 @@ const router = createRouter({
         title: 'Edit Configuration'
       }
     },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/settingsView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Settings'
+      }
+    },
     // Catch all route (404)
     {
       path: '/:pathMatch(.*)*',

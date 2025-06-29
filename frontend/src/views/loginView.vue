@@ -72,9 +72,13 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import { useCaddyServersStore } from '../stores/caddyServersStore';
+import { useCaddyConfigsStore } from '../stores/caddyConfigsStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const serversStore = useCaddyServersStore();
+const configsStore = useCaddyConfigsStore();
 
 const username = ref('');
 const password = ref('');
@@ -95,6 +99,12 @@ const handleLogin = async () => {
       username: username.value,
       password: password.value
     });
+
+    // Refetch servers and configs after successful login
+    await Promise.allSettled([
+      serversStore.fetchServers(),
+      configsStore.fetchAllConfigs()
+    ]);
     
     // Redirect to dashboard on successful login
     router.push('/');

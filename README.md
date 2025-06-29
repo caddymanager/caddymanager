@@ -32,6 +32,14 @@ Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack
 
 ---
 
+## 🧪 Development: Caddy Test Servers
+
+For local testing with real Caddy servers, see [`development/USAGE.md`](development/USAGE.md) for scripts to:
+- Build and run a custom Caddy sandbox server with popular plugins
+- Spin up multiple vanilla Caddy servers for multi-server testing
+
+---
+
 ## 🛠️ Getting Started
 
 1. **Clone the repository:**
