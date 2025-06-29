@@ -162,6 +162,7 @@ JWT_EXPIRATION=24h
 
 ## 📚 Documentation
 - [Caddy Documentation](https://caddyserver.com/docs/)
+- [CaddyManager Docs](https://caddymanager.online/#/docs)
 - [Swagger API Docs](http://localhost:3000/api-docs) (after starting backend)
 
 ---
