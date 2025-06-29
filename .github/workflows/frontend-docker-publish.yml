@@ -159,10 +159,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.package-version.outputs.version }}.build-${{ steps.build-meta.outputs.build-number }},enable=${{ github.ref == 'refs/heads/main' }}
+            # Main branch: version, latest, stable
+            type=raw,value=${{ steps.package-version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ steps.package-version.outputs.version }}-dev.build-${{ steps.build-meta.outputs.build-number }},enable=${{ github.ref == 'refs/heads/develop' }}
+            # Develop branch: version-next, next
+            type=raw,value=${{ steps.package-version.outputs.version }}-next,enable=${{ github.ref == 'refs/heads/develop' }}
             type=raw,value=next,enable=${{ github.ref == 'refs/heads/develop' }}
+            # Release branches: rc
             type=raw,value=${{ github.ref_name }}-rc.build-${{ steps.build-meta.outputs.build-number }},enable=${{ startsWith(github.ref, 'refs/heads/release/') }}
             type=sha
           labels: |
