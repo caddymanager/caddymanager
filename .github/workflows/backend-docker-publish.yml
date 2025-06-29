@@ -1,11 +1,9 @@
-name: Build and Publish Backend Docker Image
+name: Build and Publish Backend Docker Image (Stable)
 
 on:
   push:
     branches:
       - 'main'
-      - 'develop'
-      - 'release/*'
     tags:
       - 'v*.*.*'
 
