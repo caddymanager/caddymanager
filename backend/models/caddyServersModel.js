@@ -25,25 +25,6 @@ const caddyServerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  auth: {
-    username: {
-      type: String,
-      trim: true
-    },
-    password: {
-      type: String,
-      trim: true
-    },
-    token: {
-      type: String,
-      trim: true
-    },
-    authType: {
-      type: String,
-      enum: ['none', 'basic', 'token'],
-      default: 'none'
-    }
-  },
   tags: {
     type: [String],
     default: []

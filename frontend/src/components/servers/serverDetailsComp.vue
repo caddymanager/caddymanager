@@ -136,62 +136,6 @@
             />
           </div>
 
-          <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Authentication</h5>
-          
-          <!-- Auth Type -->
-          <div class="mb-4">
-            <label for="authType" class="block text-sm font-medium text-tertiary mb-1">Auth Type</label>
-            <select 
-              id="authType" 
-              v-model="formData.auth.authType"
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-            >
-              <option value="none">None</option>
-              <option value="basic">Basic Auth</option>
-              <option value="token">Token</option>
-            </select>
-          </div>
-          
-          <!-- Username (for basic auth) -->
-          <div v-if="formData.auth.authType === 'basic'" class="mb-4">
-            <label for="username" class="block text-sm font-medium text-tertiary mb-1">Username</label>
-            <input 
-              id="username" 
-              v-model="formData.auth.username" 
-              type="text" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              required
-            />
-          </div>
-          
-          <!-- Password (for basic auth) -->
-          <div v-if="formData.auth.authType === 'basic'" class="mb-4">
-            <label for="password" class="block text-sm font-medium text-tertiary mb-1">Password</label>
-            <input 
-              id="password" 
-              v-model="formData.auth.password" 
-              type="password" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              :required="formData.auth.authType === 'basic'"
-              :placeholder="server.auth?.password ? '••••••••' : ''"
-            />
-            <p class="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>
-          </div>
-          
-          <!-- Token (for token auth) -->
-          <div v-if="formData.auth.authType === 'token'" class="mb-4">
-            <label for="token" class="block text-sm font-medium text-tertiary mb-1">Token</label>
-            <input 
-              id="token" 
-              v-model="formData.auth.token" 
-              type="password" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              :required="formData.auth.authType === 'token'"
-              :placeholder="server.auth?.token ? '••••••••' : ''"
-            />
-            <p class="text-xs text-gray-500 mt-1">Leave blank to keep current token</p>
-          </div>
-
           <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Server Status</h5>
           
           <!-- Active -->
@@ -245,7 +189,6 @@
           <div v-if="server.description" class="mb-4">
             <p class="text-gray-500">{{ server.description }}</p>
           </div>
-          
           <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Connection Information</h5>
           <div class="flex flex-col gap-3 mb-4">
             <div class="flex flex-wrap gap-2 py-1">
@@ -267,29 +210,6 @@
             <div class="flex flex-wrap gap-2 py-1">
               <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">HTTPS Port</div>
               <div class="flex-1">{{ server.httpsPort || 'Default (443)' }}</div>
-            </div>
-          </div>
-          
-          <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Authentication</h5>
-          <div class="flex flex-col gap-3 mb-4">
-            <div class="flex flex-wrap gap-2 py-1">
-              <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">Auth Type</div>
-              <div class="flex-1">{{ server.auth?.authType || 'None' }}</div>
-            </div>
-            <div v-if="server.auth?.username" class="flex flex-wrap gap-2 py-1">
-              <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">Username</div>
-              <div class="flex-1">{{ server.auth.username }}</div>
-            </div>
-            <div class="flex flex-wrap gap-2 py-1">
-              <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">Type</div>
-              <div class="flex-1">
-                <span v-if="server.existingInstance" class="inline-flex items-center rounded-md bg-tertiary/20 px-1.5 py-0.5 text-xs font-medium text-tertiary ring-1 ring-inset ring-tertiary/30">
-                  Existing Instance
-                </span>
-                <span v-else class="inline-flex items-center rounded-md bg-secondary/20 px-1.5 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/30">
-                  Managed Instance
-                </span>
-              </div>
             </div>
           </div>
           
@@ -424,12 +344,6 @@ const formData = ref({
   httpPort: null,
   httpsPort: null,
   active: true,
-  auth: {
-    authType: 'none',
-    username: '',
-    password: '',
-    token: ''
-  },
   tags: []
 })
 
@@ -448,16 +362,8 @@ watch(server, (newServer) => {
       httpPort: newServer.httpPort || null,
       httpsPort: newServer.httpsPort || null,
       active: newServer.active !== undefined ? newServer.active : true,
-      auth: {
-        authType: newServer.auth?.authType || 'none',
-        username: newServer.auth?.username || '',
-        // Don't prefill password/token for security reasons
-        password: '',
-        token: ''
-      },
       tags: newServer.tags || []
     }
-    
     // Join tags as comma-separated string for the input field
     tagsInput.value = newServer.tags ? newServer.tags.join(', ') : ''
   }
@@ -467,32 +373,19 @@ watch(server, (newServer) => {
 async function saveServerChanges() {
   formError.value = null
   isSaving.value = true
-  
   try {
     // Process tags from the input field
     const tags = tagsInput.value
       .split(',')
       .map(tag => tag.trim())
       .filter(tag => tag !== '')
-    
     // Prepare the data to send
     const dataToUpdate = { 
       ...formData.value,
       tags 
     }
-    
-    // Don't send empty password/token to avoid overwriting existing ones
-    if (dataToUpdate.auth.authType === 'basic' && !dataToUpdate.auth.password) {
-      delete dataToUpdate.auth.password
-    }
-    
-    if (dataToUpdate.auth.authType === 'token' && !dataToUpdate.auth.token) {
-      delete dataToUpdate.auth.token
-    }
-    
     // Call the store method to update the server
     const result = await serversStore.updateServer(props.serverId, dataToUpdate)
-    
     if (result) {
       // Redirect to the server details page after successful update
       router.push({ name: 'serverDetails', params: { id: props.serverId } })

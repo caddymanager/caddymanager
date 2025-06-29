@@ -117,104 +117,6 @@
           <p class="mt-1 text-xs text-tertiary/70">The API path (default: /config/)</p>
         </div>
 
-        <!-- Authentication Section -->
-        <div class="md:col-span-2 mt-4">
-          <h4 class="text-sm font-medium text-tertiary mb-3 pb-2 border-b border-gray-200">Authentication</h4>
-          
-          <div class="flex items-center mb-4">
-            <label class="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                v-model="formData.requiresAuth" 
-                class="sr-only peer"
-              />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark relative inline-flex items-center justify-center"></div>
-              <span class="ml-3 text-sm text-tertiary/70">Server requires authentication</span>
-            </label>
-          </div>
-
-          <div v-if="formData.requiresAuth" class="border-t border-gray-200 pt-4 mt-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Auth Type -->
-              <div class="flex flex-col mb-2">
-                <label for="authType" class="block text-sm font-medium text-tertiary mb-1">Authentication Type</label>
-                <select
-                  id="authType"
-                  v-model="formData.auth.authType"
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                >
-                  <option value="basic">Basic Auth</option>
-                  <option value="token">Token Auth</option>
-                  <option value="none">No Auth</option>
-                </select>
-              </div>
-
-              <div v-if="formData.auth.authType === 'basic'" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
-                <div class="flex flex-col mb-2">
-                  <label for="username" class="block text-sm font-medium text-tertiary  mb-1">Username</label>
-                  <input
-                    id="username"
-                    v-model="formData.auth.username"
-                    type="text"
-                    class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    placeholder="admin"
-                    @input="validateForm"
-                  />
-                  <p v-if="errors.username" class="mt-1 text-xs text-red-600">{{ errors.username }}</p>
-                </div>
-
-                <div class="flex flex-col mb-2">
-                  <label for="password" class="block text-sm font-medium text-tertiary  mb-1">Password</label>
-                  <div class="relative">
-                    <input
-                      id="password"
-                      v-model="formData.auth.password"
-                      :type="showPassword ? 'text' : 'password'"
-                      class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary pr-10"
-                      placeholder="••••••••"
-                      @input="validateForm"
-                    />
-                    <button 
-                      type="button" 
-                      class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-tertiary  focus:outline-none" 
-                      @click="showPassword = !showPassword"
-                      aria-label="Toggle password visibility"
-                    >
-                      <EyeSlashIcon v-if="showPassword" class="h-5 w-5" />
-                      <EyeIcon v-else class="h-5 w-5" />
-                    </button>
-                  </div>
-                  <p v-if="errors.password" class="mt-1 text-xs text-red-600">{{ errors.password }}</p>
-                </div>
-              </div>
-
-              <div v-else-if="formData.auth.authType === 'token'" class="flex flex-col mb-2 md:col-span-2">
-                <label for="token" class="block text-sm font-medium text-tertiary  mb-1">API Token</label>
-                <div class="relative">
-                  <input
-                    id="token"
-                    v-model="formData.auth.token"
-                    :type="showToken ? 'text' : 'password'"
-                    class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary pr-10"
-                    placeholder="Enter access token"
-                    @input="validateForm"
-                  />
-                  <button 
-                    type="button" 
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-tertiary  focus:outline-none" 
-                    @click="showToken = !showToken"
-                    aria-label="Toggle token visibility"
-                  >
-                    <EyeSlashIcon v-if="showToken" class="h-5 w-5" />
-                    <EyeIcon v-else class="h-5 w-5" />
-                  </button>
-                </div>
-                <p v-if="errors.token" class="mt-1 text-xs text-red-600">{{ errors.token }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Additional Options -->
         <div class="md:col-span-2 mt-4">
           <h4 class="text-sm font-medium text-tertiary  mb-3 pb-2 border-b border-gray-200">Additional Options</h4>
@@ -321,13 +223,6 @@ const formData = reactive({
   apiUrl: 'http://localhost',
   apiPort: 2019,
   adminApiPath: '/config/',
-  requiresAuth: false,
-  auth: {
-    username: '',
-    password: '',
-    token: '',
-    authType: 'basic'
-  },
   active: true,
   pullExistingConfig: true
 });
@@ -336,21 +231,14 @@ const formData = reactive({
 const errors = reactive({
   name: '',
   apiUrl: '',
-  apiPort: '',
-  username: '',
-  password: '',
-  token: ''
+  apiPort: ''
 });
 
 // Computed properties
 const isFormValid = computed(() => {
   return formData.name.trim() !== '' && 
          isValidUrl(formData.apiUrl) && 
-         formData.apiPort > 0 && formData.apiPort <= 65535 &&
-         (!formData.requiresAuth || 
-           (formData.auth.authType === 'basic' && formData.auth.username.trim() !== '' && formData.auth.password !== '') ||
-           (formData.auth.authType === 'token' && formData.auth.token.trim() !== '')
-         );
+         formData.apiPort > 0 && formData.apiPort <= 65535;
 });
 
 // Methods
@@ -371,23 +259,6 @@ function validateForm() {
   // Validate API Port
   if (formData.apiPort <= 0 || formData.apiPort > 65535) {
     errors.apiPort = 'Please enter a valid port number (1-65535)';
-  }
-  
-  // Validate auth fields if auth is required
-  if (formData.requiresAuth) {
-    if (formData.auth.authType === 'basic') {
-      if (formData.auth.username.trim() === '') {
-        errors.username = 'Username is required for authentication';
-      }
-      
-      if (formData.auth.password === '') {
-        errors.password = 'Password is required for authentication';
-      }
-    } else if (formData.auth.authType === 'token') {
-      if (formData.auth.token.trim() === '') {
-        errors.token = 'API token is required for authentication';
-      }
-    }
   }
 }
 
@@ -410,15 +281,6 @@ async function handleSubmit() {
   isSubmitting.value = true;
   
   try {
-    // If requires auth is false, set authType to 'none'
-    if (!formData.requiresAuth) {
-      formData.auth.authType = 'none';
-      // Clear any authentication data
-      formData.auth.username = '';
-      formData.auth.password = '';
-      formData.auth.token = '';
-    }
-
     // Process tags from the input
     const tags = parsedTags.value;
 
@@ -428,12 +290,6 @@ async function handleSubmit() {
       apiUrl: formData.apiUrl,
       apiPort: formData.apiPort,
       adminApiPath: formData.adminApiPath,
-      auth: {
-        username: formData.auth.username,
-        password: formData.auth.password,
-        token: formData.auth.token,
-        authType: formData.auth.authType
-      },
       active: formData.active,
       tags: tags,
       pullExistingConfig: formData.pullExistingConfig
@@ -474,13 +330,6 @@ function resetForm() {
     apiUrl: 'http://localhost',
     apiPort: 2019,
     adminApiPath: '/config/',
-    requiresAuth: false,
-    auth: {
-      username: '',
-      password: '',
-      token: '',
-      authType: 'basic'
-    },
     active: true,
     pullExistingConfig: true
   });

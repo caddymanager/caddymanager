@@ -23,15 +23,7 @@ class CaddyService {
       timeout: 10000 // 10 seconds timeout
     };
 
-    // Add authentication if configured
-    if (serverConfig.auth && serverConfig.auth.authType === 'basic' && serverConfig.auth.username && serverConfig.auth.password) {
-      config.auth = {
-        username: serverConfig.auth.username,
-        password: serverConfig.auth.password
-      };
-    } else if (serverConfig.auth && serverConfig.auth.authType === 'token' && serverConfig.auth.token) {
-      config.headers['Authorization'] = `Bearer ${serverConfig.auth.token}`;
-    }
+    // No authentication logic
 
     return axios.create(config);
   }
@@ -52,18 +44,6 @@ class CaddyService {
   async addServer(serverData) {
     // Create new server instance
     const newServer = new CaddyServer(serverData);
-    
-    // If no authentication is provided but defaults exist in environment,
-    // use the default authentication settings
-    if ((!newServer.auth || newServer.auth.authType === 'none') && 
-        process.env.DEFAULT_CADDY_ADMIN_USER && 
-        process.env.DEFAULT_CADDY_ADMIN_PASSWORD) {
-      newServer.auth = {
-        username: process.env.DEFAULT_CADDY_ADMIN_USER,
-        password: process.env.DEFAULT_CADDY_ADMIN_PASSWORD,
-        authType: 'basic'
-      };
-    }
     
     // Test connection before saving
     try {
@@ -226,6 +206,8 @@ class CaddyService {
    * @param {Object} serverConfig - Server configuration
    * @returns {string} - The command to run
    */
+  
+  // THIS NEEDS TO BE REWORKED
   generateCaddyStartCommand(serverConfig) {
     let command = 'caddy run';
     
@@ -235,30 +217,17 @@ class CaddyService {
     
     command += ` --admin ${serverConfig.apiUrl.replace(/^https?:\/\//, '')}:${serverConfig.apiPort}`;
     
-    // Add authentication environment variables if using basic auth
-    if (serverConfig.auth && serverConfig.auth.authType === 'basic') {
-      return `CADDY_ADMIN_USER=${serverConfig.auth.username} CADDY_ADMIN_PASSWORD=${serverConfig.auth.password} ${command}`;
-    }
-    
     return command;
   }
 
   /**
-   * Generates a Docker Compose file for a Caddy server with authentication
+   * Generates a Docker Compose file for a Caddy server (no authentication support)
    * @param {Object} serverConfig - Server configuration
    * @returns {string} - Docker Compose file content
    */
+
+  // THIS NEEDS TO BE REWORKED
   generateDockerComposeFile(serverConfig) {
-    // Build auth settings
-    const authSettings = serverConfig.auth && 
-                         serverConfig.auth.authType === 'basic' && 
-                         serverConfig.auth.username && 
-                         serverConfig.auth.password ? 
-                         `
-      # Authentication credentials
-      CADDY_ADMIN_USER: ${serverConfig.auth.username}
-      CADDY_ADMIN_PASSWORD: ${serverConfig.auth.password}` : '';
-    
     return `version: "3.9"
 
 services:
@@ -268,14 +237,9 @@ services:
     entrypoint: >
       sh -c "
         # Configure the Caddy admin API before startup
-        echo '{
-          admin 0.0.0.0:${serverConfig.apiPort} {
-            credentials $$CADDY_ADMIN_USER $$CADDY_ADMIN_PASSWORD
-          }
-        }' > /etc/caddy/admin-conf.json &&
+        echo '{\n          admin 0.0.0.0:${serverConfig.apiPort}\n        }' > /etc/caddy/admin-conf.json &&
         # Start Caddy with the JSON config mounted as volume
         caddy run"
-    environment:${authSettings}
     ports:
       - "80:80"
       - "443:443"
