@@ -40,7 +40,7 @@ For local testing with real Caddy servers, see [`development/USAGE.md`](developm
 
 ---
 
-## 🛠️ Getting Started
+## 🛠️ Getting Started using local development environment
 
 1. **Clone the repository:**
    ```sh
@@ -100,8 +100,10 @@ Contributions are welcome! Please open issues and pull requests to help improve 
 
 ---
 
-## 🛡️ License
+## 🛡️ License & Legal
 This project is open source and available under the [MIT License](LICENSE).
+
+This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Caddy, Matthew Holt, Stack Holdings GmbH, or ZeroSSL. The name "Caddy" is a registered trademark of Stack Holdings GmbH. All information about Caddy, its history, and trademarks is provided for reference only.
 
 ---
 
@@ -154,3 +156,12 @@ networks:
   caddymanager:
     driver: bridge
 ```
+
+---
+
+## 📬 Get in Touch
+
+Have questions, feedback, or want to contribute? Feel free to reach out:
+
+- Email: [bastian@bastianstolk.com](mailto:bastian@bastianstolk.com)
+- Open an issue or pull request on GitHub

@@ -1,0 +1,23 @@
+---
+name: Security Report
+about: Privately report a security vulnerability (do not disclose publicly)
+labels: security
+assignees: ''
+---
+
+**IMPORTANT: Do not disclose security vulnerabilities in public issues!**
+
+If you believe you have found a security vulnerability, please email us at bastian@bastianstolk.com with the details. We take security seriously and will respond as soon as possible.
+
+**Summary of the issue**
+A clear and concise description of the security issue.
+
+**Steps to reproduce (if applicable)**
+1. ...
+2. ...
+
+**Impact**
+Describe the potential impact of this vulnerability.
+
+**Additional context**
+Add any other context or information here.
