@@ -1,18 +1,16 @@
-name: Build and Publish Frontend Docker Image (Stable)
+name: Build and Publish Frontend Docker Image (Next)
 
 on:
   push:
     branches:
-      - 'main'
-    tags:
-      - 'v*.*.*'
+      - 'develop'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-frontend
 
 jobs:
-  build-and-push-frontend:
+  build-and-push-frontend-next:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,9 +50,7 @@ jobs:
       - name: Generate build metadata
         id: build-meta
         run: |
-          # Generate build number
           BUILD_NUMBER="${{ github.run_number }}"
-          # Get commit range for changelog
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
               COMMIT_RANGE="${{ github.sha }}"
@@ -73,17 +69,12 @@ jobs:
       - name: Generate changelog and features
         id: changelog
         run: |
-          # Create changelog from commits
           echo "## Changes in this build" > frontend/CHANGELOG.md
           echo "" >> frontend/CHANGELOG.md
-          
-          # Get commits and categorize them
           FEATURES=""
           FIXES=""
           BREAKING=""
           OTHER=""
-          
-          # Process commits
           git log --pretty=format:"%s (%h)" ${{ steps.build-meta.outputs.commit-range }} | while read -r line; do
             if [[ $line =~ ^feat(\(.*\))?!: ]]; then
               echo "- 🚨 **BREAKING:** ${line#*: }" >> breaking.tmp
@@ -97,43 +88,31 @@ jobs:
               echo "- 📝 $line" >> other.tmp
             fi
           done
-          
-          # Build changelog sections
           if [ -f breaking.tmp ]; then
             echo "### 🚨 Breaking Changes" >> frontend/CHANGELOG.md
             cat breaking.tmp >> frontend/CHANGELOG.md
             echo "" >> frontend/CHANGELOG.md
           fi
-          
           if [ -f features.tmp ]; then
             echo "### ✨ New Features" >> frontend/CHANGELOG.md
             cat features.tmp >> frontend/CHANGELOG.md
             echo "" >> frontend/CHANGELOG.md
           fi
-          
           if [ -f fixes.tmp ]; then
             echo "### 🐛 Bug Fixes" >> frontend/CHANGELOG.md
             cat fixes.tmp >> frontend/CHANGELOG.md
             echo "" >> frontend/CHANGELOG.md
           fi
-          
           if [ -f other.tmp ]; then
             echo "### 🔧 Other Changes" >> frontend/CHANGELOG.md
             cat other.tmp >> frontend/CHANGELOG.md
             echo "" >> frontend/CHANGELOG.md
           fi
-          
-          # Count features for summary
           FEATURE_COUNT=$([ -f features.tmp ] && wc -l < features.tmp || echo "0")
           FIX_COUNT=$([ -f fixes.tmp ] && wc -l < fixes.tmp || echo "0")
-          
           echo "feature-count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
           echo "fix-count=$FIX_COUNT" >> $GITHUB_OUTPUT
-          
-          # Clean up temp files
           rm -f features.tmp fixes.tmp breaking.tmp other.tmp
-          
-          # Display changelog
           echo "Generated changelog:"
           cat frontend/CHANGELOG.md
 
@@ -163,9 +142,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.package-version.outputs.version }}
-            type=raw,value=latest
-            type=raw,value=stable
+            type=raw,value=${{ steps.package-version.outputs.version }}-next
+            type=raw,value=next
             type=sha
           labels: |
             org.opencontainers.image.title=${{ github.repository }}-frontend
@@ -187,10 +165,10 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository }}-frontend:latest
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.package-version.outputs.version }}
-            caddymanager/caddymanager-frontend:latest
-            caddymanager/caddymanager-frontend:${{ steps.package-version.outputs.version }}
+            ghcr.io/${{ github.repository }}-frontend:next
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.package-version.outputs.version }}-next
+            caddymanager/caddymanager-frontend:next
+            caddymanager/caddymanager-frontend:${{ steps.package-version.outputs.version }}-next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

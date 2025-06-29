@@ -1,18 +1,16 @@
-name: Build and Publish Frontend Docker Image (Stable)
+name: Build and Publish Backend Docker Image (Next)
 
 on:
   push:
     branches:
-      - 'main'
-    tags:
-      - 'v*.*.*'
+      - 'develop'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-frontend
+  IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  build-and-push-frontend:
+  build-and-push-backend-next:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,34 +25,25 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
-      - name: Install dependencies (frontend)
+      - name: Install dependencies (backend)
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci
           else
             npm install
           fi
-        working-directory: frontend
+        working-directory: backend
 
       - name: Generate build information
         run: node scripts/generateBuildInfo.js
-        working-directory: frontend
-
-      - name: Get package version
-        id: package-version
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "version=$version" >> $GITHUB_OUTPUT
-        working-directory: frontend
+        working-directory: backend
 
       - name: Generate build metadata
         id: build-meta
         run: |
-          # Generate build number
           BUILD_NUMBER="${{ github.run_number }}"
-          # Get commit range for changelog
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
               COMMIT_RANGE="${{ github.sha }}"
@@ -68,22 +57,17 @@ jobs:
           echo "commit-range=$COMMIT_RANGE" >> $GITHUB_OUTPUT
           echo "build-date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "build-sha=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
-        working-directory: frontend
+        working-directory: backend
 
       - name: Generate changelog and features
         id: changelog
         run: |
-          # Create changelog from commits
-          echo "## Changes in this build" > frontend/CHANGELOG.md
-          echo "" >> frontend/CHANGELOG.md
-          
-          # Get commits and categorize them
+          echo "## Changes in this build" > backend/CHANGELOG.md
+          echo "" >> backend/CHANGELOG.md
           FEATURES=""
           FIXES=""
           BREAKING=""
           OTHER=""
-          
-          # Process commits
           git log --pretty=format:"%s (%h)" ${{ steps.build-meta.outputs.commit-range }} | while read -r line; do
             if [[ $line =~ ^feat(\(.*\))?!: ]]; then
               echo "- 🚨 **BREAKING:** ${line#*: }" >> breaking.tmp
@@ -97,49 +81,44 @@ jobs:
               echo "- 📝 $line" >> other.tmp
             fi
           done
-          
-          # Build changelog sections
           if [ -f breaking.tmp ]; then
-            echo "### 🚨 Breaking Changes" >> frontend/CHANGELOG.md
-            cat breaking.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🚨 Breaking Changes" >> backend/CHANGELOG.md
+            cat breaking.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f features.tmp ]; then
-            echo "### ✨ New Features" >> frontend/CHANGELOG.md
-            cat features.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### ✨ New Features" >> backend/CHANGELOG.md
+            cat features.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f fixes.tmp ]; then
-            echo "### 🐛 Bug Fixes" >> frontend/CHANGELOG.md
-            cat fixes.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🐛 Bug Fixes" >> backend/CHANGELOG.md
+            cat fixes.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
           if [ -f other.tmp ]; then
-            echo "### 🔧 Other Changes" >> frontend/CHANGELOG.md
-            cat other.tmp >> frontend/CHANGELOG.md
-            echo "" >> frontend/CHANGELOG.md
+            echo "### 🔧 Other Changes" >> backend/CHANGELOG.md
+            cat other.tmp >> backend/CHANGELOG.md
+            echo "" >> backend/CHANGELOG.md
           fi
-          
-          # Count features for summary
           FEATURE_COUNT=$([ -f features.tmp ] && wc -l < features.tmp || echo "0")
           FIX_COUNT=$([ -f fixes.tmp ] && wc -l < fixes.tmp || echo "0")
-          
           echo "feature-count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
           echo "fix-count=$FIX_COUNT" >> $GITHUB_OUTPUT
-          
-          # Clean up temp files
           rm -f features.tmp fixes.tmp breaking.tmp other.tmp
-          
-          # Display changelog
           echo "Generated changelog:"
-          cat frontend/CHANGELOG.md
+          cat backend/CHANGELOG.md
+
+      - name: Get package version
+        id: package-version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
+        working-directory: backend
 
       - name: Set lowercase image name
         run: |
-          echo "DOCKER_IMAGE_NAME=$(echo ${{ github.repository }}-frontend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_NAME=$(echo ${{ github.repository }}-backend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -163,13 +142,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.package-version.outputs.version }}
-            type=raw,value=latest
-            type=raw,value=stable
+            type=raw,value=${{ steps.package-version.outputs.version }}-next
+            type=raw,value=next
             type=sha
           labels: |
-            org.opencontainers.image.title=${{ github.repository }}-frontend
-            org.opencontainers.image.description=Caddy Manager Frontend
+            org.opencontainers.image.title=${{ github.repository }}-backend
+            org.opencontainers.image.description=Caddy Manager Backend
             org.opencontainers.image.version=${{ steps.package-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.build-meta.outputs.build-date }}
@@ -180,17 +158,17 @@ jobs:
             caddymanager.build.fixes=${{ steps.changelog.outputs.fix-count }}
             caddymanager.build.workflow-run=${{ github.run_id }}
 
-      - name: Build and push frontend image
+      - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./backend
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository }}-frontend:latest
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.package-version.outputs.version }}
-            caddymanager/caddymanager-frontend:latest
-            caddymanager/caddymanager-frontend:${{ steps.package-version.outputs.version }}
+            ghcr.io/${{ github.repository }}-backend:next
+            ghcr.io/${{ github.repository }}-backend:${{ steps.package-version.outputs.version }}-next
+            caddymanager/caddymanager-backend:next
+            caddymanager/caddymanager-backend:${{ steps.package-version.outputs.version }}-next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -199,15 +177,23 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             GIT_BRANCH=${{ github.ref_name }}
             BUILD_DATE=${{ steps.build-meta.outputs.build-date }}
-            API_BASE_URL=http://localhost:3000/api/v1
-            APP_NAME=Caddy Manager
-            DARK_MODE=true
+            PORT=3000
+            MONGODB_URI=
+            CORS_ORIGIN=http://localhost:5173
+            LOG_LEVEL=debug
+            DEFAULT_CADDY_ADMIN_USER=admin
+            DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
+            CADDY_SANDBOX_URL=http://localhost:2019
+            PING_INTERVAL=30000
+            PING_TIMEOUT=2000
+            AUDIT_LOG_MAX_SIZE_MB=100
+            AUDIT_LOG_RETENTION_DAYS=90
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4
         with:
           name: changelog-build-${{ steps.build-meta.outputs.build-number }}
-          path: frontend/CHANGELOG.md
+          path: backend/CHANGELOG.md
           retention-days: 30
 
       - name: Build Summary
@@ -222,4 +208,4 @@ jobs:
           echo "- **Bugs Fixed:** ${{ steps.changelog.outputs.fix-count }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 Full Changelog" >> $GITHUB_STEP_SUMMARY
-          cat frontend/CHANGELOG.md >> $GITHUB_STEP_SUMMARY
+          cat backend/CHANGELOG.md >> $GITHUB_STEP_SUMMARY
