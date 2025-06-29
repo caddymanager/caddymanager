@@ -1,0 +1,6 @@
+# GitHub Issue Forms configuration
+blank_issues_enabled: false
+contact_links:
+  - name: Security Contact
+    url: mailto:bastian@bastianstolk.com
+    about: Please report security vulnerabilities via email, not in public issues.
