@@ -3,7 +3,7 @@
     <div class="login-container">
       <div class="login-form">
         <div class="flex justify-center mb-6">
-          <img src="/favicon.ico" alt="Caddy Manager Logo" class="h-12 w-12" />
+          <img src="/Logo_Plain_SVG.png" alt="Caddy Manager Logo" class="h-36 w-36" />
         </div>
         <h1 class="text-2xl font-bold text-center mb-8">Caddy Manager</h1>
         
