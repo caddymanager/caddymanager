@@ -32,6 +32,14 @@ body:
       placeholder: A clear and concise description of any alternative solutions or features you've considered.
     validations:
       required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running?
+      placeholder: ex. 1.0.2
+    validations:
+      required: false
   - type: textarea
     id: context
     attributes:
@@ -40,3 +48,11 @@ body:
       placeholder: Additional context or screenshots
     validations:
       required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](../CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
