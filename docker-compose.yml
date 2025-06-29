@@ -1,0 +1,70 @@
+services:
+  # MongoDB database for persistent storage
+  mongodb:
+    image: mongo:8.0
+    container_name: caddymanager-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=someSecretPassword  # Change for production!
+    ports:
+      - "27017:27017"  # Expose for local dev, remove for production
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - caddymanager
+
+  # Backend API server
+  backend:
+    image: caddymanager/caddymanager-backend:latest
+    container_name: caddymanager-backend
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
+      - CORS_ORIGIN=http://localhost:5173
+      - LOG_LEVEL=debug
+      - DEFAULT_CADDY_ADMIN_USER=admin
+      - DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
+      - CADDY_SANDBOX_URL=http://localhost:2019
+      - PING_INTERVAL=30000
+      - PING_TIMEOUT=2000
+      - AUDIT_LOG_MAX_SIZE_MB=100
+      - AUDIT_LOG_RETENTION_DAYS=90
+      - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
+      - JWT_EXPIRATION=24h
+    ports:
+      - "3000:3000"  # Expose API
+    networks:
+      - caddymanager
+
+  # Frontend web UI
+  frontend:
+    image: caddymanager/caddymanager-frontend:latest
+    container_name: caddymanager-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - API_BASE_URL=http://backend:3000/api/v1
+      - APP_NAME=Caddy Manager
+      - DARK_MODE=true
+    ports:
+      - "80:80"  # Expose web UI
+    networks:
+      - caddymanager
+
+networks:
+  caddymanager:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+
+# Notes:
+# - For production, use strong passwords and consider secrets management.
+# - The backend connects to MongoDB using the service name 'mongodb'.
+# - The frontend connects to the backend using the service name 'backend'.
+# - Remove or restrict published ports in production environments.
