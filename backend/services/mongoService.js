@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // MongoDB connection string from environment variables or use default
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/caddyManager';
+const mongoURI = process.env.MONGODB_URI || '';
 
 const connectToMongo = async () => {
   try {
