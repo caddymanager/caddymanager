@@ -136,6 +136,7 @@ PORT=3000
 MONGODB_URI=mongodb://mongoadmin:someSecretPassword@localhost:27017/caddymanager?authSource=admin
 CORS_ORIGIN=http://localhost:5173
 LOG_LEVEL=debug
+# Credentials for the Caddy admin endpoint (not CaddyManager login)
 DEFAULT_CADDY_ADMIN_USER=admin
 DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
 CADDY_SANDBOX_URL=http://localhost:2019
@@ -150,11 +151,13 @@ JWT_EXPIRATION=24h
 - `MONGODB_URI`: MongoDB connection string (update credentials as needed).
 - `CORS_ORIGIN`: Allowed origin for frontend requests - should be the url of your frontend.
 - `LOG_LEVEL`: Logging verbosity.
-- `DEFAULT_CADDY_ADMIN_USER` / `DEFAULT_CADDY_ADMIN_PASSWORD`: Initial admin credentials.
+- `DEFAULT_CADDY_ADMIN_USER` / `DEFAULT_CADDY_ADMIN_PASSWORD`: **Credentials for the Caddy admin endpoint, not for logging into CaddyManager.**
 - `CADDY_SANDBOX_URL`: URL for the Caddy sandbox server (for testing) and/or validating configs.
 - `PING_INTERVAL` / `PING_TIMEOUT`: Health check intervals (ms).
 - `AUDIT_LOG_MAX_SIZE_MB` / `AUDIT_LOG_RETENTION_DAYS`: Audit log settings.
 - `JWT_SECRET` / `JWT_EXPIRATION`: JWT credential settings
+
+> **Note:** The default CaddyManager user when first creating the app is `admin` with password `caddyrocks`. You can change this after logging in.
 
 > **Tip:** Copy `.env.example` to `.env` in each directory and adjust values as needed for your environment.
 
