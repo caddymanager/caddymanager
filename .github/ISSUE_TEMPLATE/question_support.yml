@@ -1,0 +1,20 @@
+---
+name: Question / Support
+about: Ask a question or request support for Caddy Manager
+labels: question
+assignees: ''
+---
+
+**What do you need help with?**
+A clear and concise description of your question or the support you need.
+
+**Relevant context**
+Add any relevant context, code snippets, or screenshots that might help us assist you.
+
+**Environment (if applicable):**
+- OS: [e.g. macOS, Windows, Linux]
+- Browser [e.g. Chrome, Safari]
+- Version [e.g. 22]
+
+**Additional information**
+Add any other information or details here.
