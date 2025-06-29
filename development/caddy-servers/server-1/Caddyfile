@@ -1,8 +1,0 @@
-{
-    admin 0.0.0.0:2019
-    # Use default storage locations in the container
-}
-
-:80 {
-    respond "Hello from Caddy Server #1 running on container port 80 (host port 8000) with admin API on port 2019"
-}
