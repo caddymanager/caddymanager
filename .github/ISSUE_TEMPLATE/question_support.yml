@@ -1,20 +1,42 @@
----
 name: Question / Support
-about: Ask a question or request support for Caddy Manager
-labels: question
-assignees: ''
----
-
-**What do you need help with?**
-A clear and concise description of your question or the support you need.
-
-**Relevant context**
-Add any relevant context, code snippets, or screenshots that might help us assist you.
-
-**Environment (if applicable):**
-- OS: [e.g. macOS, Windows, Linux]
-- Browser [e.g. Chrome, Safari]
-- Version [e.g. 22]
-
-**Additional information**
-Add any other information or details here.
+description: Ask a question or request support for Caddy Manager
+title: "[Question]: "
+labels: ["question"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help or have a question? Please provide as much detail as possible.
+  - type: textarea
+    id: help
+    attributes:
+      label: What do you need help with?
+      description: Describe your question or the support you need.
+      placeholder: A clear and concise description of your question or support need.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Relevant context
+      description: Add any relevant context, code snippets, or screenshots that might help us assist you.
+      placeholder: Relevant context, code, or screenshots
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment (if applicable)
+      description: OS, browser, version, etc.
+      placeholder: ex. macOS, Chrome, 1.0.2
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: Any other information or details?
+      placeholder: Additional information
+    validations:
+      required: false
