@@ -7,6 +7,8 @@ Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack
 
 ---
 
+![CaddyManager Demo](https://caddymanager.online/screenshots/screenshots.gif)
+
 ## 🚀 Features
 
 - **Multi-Server Management:**
