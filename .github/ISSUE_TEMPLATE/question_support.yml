@@ -1,0 +1,58 @@
+name: Question / Support
+description: Ask a question or request support for Caddy Manager
+title: "[Question]: "
+labels: ["question"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help or have a question? Please provide as much detail as possible.
+  - type: textarea
+    id: help
+    attributes:
+      label: What do you need help with?
+      description: Describe your question or the support you need.
+      placeholder: A clear and concise description of your question or support need.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Relevant context
+      description: Add any relevant context, code snippets, or screenshots that might help us assist you.
+      placeholder: Relevant context, code, or screenshots
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment (if applicable)
+      description: OS, browser, version, etc.
+      placeholder: ex. macOS, Chrome, 1.0.2
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running?
+      placeholder: ex. 1.0.2
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: Any other information or details?
+      placeholder: Additional information
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/caddymanager/caddymanager/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

@@ -1,0 +1,52 @@
+name: Security Report
+description: Privately report a security vulnerability (do not disclose publicly)
+title: "[Security]: "
+labels: ["security"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **IMPORTANT: Do not disclose security vulnerabilities in public issues!**
+        
+        If you believe you have found a security vulnerability, please email us at bastian@bastianstolk.com with the details. We take security seriously and will respond as soon as possible.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary of the issue
+      description: A clear and concise description of the security issue.
+      placeholder: A clear and concise description of the security issue.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce (if applicable)
+      description: Steps to reproduce the vulnerability.
+      placeholder: 1. ...\n2. ...
+    validations:
+      required: false
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Describe the potential impact of this vulnerability.
+      placeholder: Describe the potential impact
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context or information here.
+      placeholder: Additional context or information
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/caddymanager/caddymanager/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

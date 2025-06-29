@@ -1,0 +1,26 @@
+{
+  "id": "empty",
+  "name": "Empty Configuration",
+  "description": "Start with a minimal Caddy configuration structure",
+  "complexity": "basic",
+  "category": "empty",
+  "icon": "DocumentPlusIcon",
+  "form": {
+    "sections": []
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "myserver": {
+            "listen": [":80"],
+            "routes": []
+          }
+        }
+      }
+    }
+  }
+}

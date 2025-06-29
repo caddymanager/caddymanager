@@ -1,0 +1,102 @@
+{
+  "id": "static-site",
+  "name": "Static Site",
+  "description": "Optimized configuration for static websites with caching",
+  "complexity": "simple",
+  "category": "static",
+  "icon": "DocumentIcon",
+  "form": {
+    "sections": [
+      {
+        "title": "Site Configuration",
+        "fields": [
+          {
+            "id": "host",
+            "label": "Hostname",
+            "type": "text",
+            "placeholder": "example.com",
+            "description": "Domain name for this site",
+            "required": true
+          },
+          {
+            "id": "listen",
+            "label": "Listen Address",
+            "type": "text",
+            "placeholder": ":80",
+            "description": "Port to listen on, e.g. :80 or :443",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Content Settings",
+        "fields": [
+          {
+            "id": "rootDir",
+            "label": "Root Directory",
+            "type": "text",
+            "placeholder": "/var/www/html",
+            "description": "Directory containing website files",
+            "required": true
+          },
+          {
+            "id": "cacheControl",
+            "label": "Cache Control",
+            "type": "text",
+            "placeholder": "max-age=3600",
+            "description": "Cache control header value",
+            "required": false
+          }
+        ]
+      },
+      {
+        "title": "Performance",
+        "fields": [
+          {
+            "id": "enableCompression",
+            "label": "Enable Compression",
+            "type": "toggle",
+            "description": "Compress responses with gzip/zstd",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "static_site": {
+            "listen": [":80"],
+            "routes": [
+              {
+                "match": [
+                  {
+                    "host": ["example.com"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "file_server",
+                    "root": "/var/www/html",
+                    "browse": false
+                  }
+                ],
+                "terminal": true
+              }
+            ]
+          }
+        }
+      },
+      "cache": {
+        "http": {
+          "default_cache_control": "max-age=3600"
+        }
+      }
+    }
+  }
+}

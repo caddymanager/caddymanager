@@ -1,0 +1,111 @@
+{
+  "id": "reverse-proxy",
+  "name": "Reverse Proxy",
+  "description": "Proxy requests to backend services with customizable settings",
+  "complexity": "intermediate",
+  "category": "proxy",
+  "icon": "ArrowsRightLeftIcon",
+  "form": {
+    "sections": [
+      {
+        "title": "Basic Settings",
+        "fields": [
+          {
+            "id": "host",
+            "label": "Hostname",
+            "type": "text",
+            "placeholder": "example.com",
+            "description": "Domain name for this proxy",
+            "required": true
+          },
+          {
+            "id": "listen",
+            "label": "Listen Address",
+            "type": "text",
+            "placeholder": ":80",
+            "description": "Port to listen on, e.g. :80 or :443",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Backend Configuration",
+        "fields": [
+          {
+            "id": "upstreams",
+            "label": "Backend Targets",
+            "type": "textarea",
+            "placeholder": "localhost:8080\nlocalhost:8081\nbackend:3000",
+            "description": "Enter one backend server per line",
+            "required": true
+          },
+          {
+            "id": "pathPrefix",
+            "label": "Path Prefix",
+            "type": "text",
+            "placeholder": "/api/*",
+            "description": "Optional path prefix (e.g. /api/*)",
+            "required": false
+          },
+          {
+            "id": "loadBalancing",
+            "label": "Load Balancing Policy",
+            "type": "select",
+            "options": [
+              { "label": "Default", "value": "" },
+              { "label": "Round Robin", "value": "round_robin" },
+              { "label": "Least Connections", "value": "least_conn" },
+              { "label": "IP Hash", "value": "ip_hash" }
+            ],
+            "description": "Load balancing strategy for multiple backends",
+            "required": false
+          }
+        ]
+      },
+      {
+        "title": "Security Settings",
+        "fields": [
+          {
+            "id": "enableTls",
+            "label": "Enable TLS (HTTPS)",
+            "type": "toggle",
+            "description": "Enable TLS for secure connections",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "proxy": {
+            "listen": [":80"],
+            "routes": [
+              {
+                "match": [
+                  {
+                    "host": ["example.com"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                      { "dial": "localhost:8080" }
+                    ]
+                  }
+                ],
+                "terminal": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

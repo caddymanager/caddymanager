@@ -1,0 +1,58 @@
+name: Documentation Improvement
+description: Suggest an improvement or correction to the documentation
+title: "[Docs]: "
+labels: ["documentation"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping us improve our documentation!
+  - type: textarea
+    id: issue
+    attributes:
+      label: Describe the documentation issue
+      description: What could be improved or corrected?
+      placeholder: A clear and concise description of the documentation issue.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location of the documentation
+      description: Please provide a link or file path to the documentation in question.
+      placeholder: ex. /docs/usage.md
+    validations:
+      required: false
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested change
+      description: What would you like to see changed or added?
+      placeholder: Describe your suggestion
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running?
+      placeholder: ex. 1.0.2
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the documentation issue here.
+      placeholder: Additional context or screenshots
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/caddymanager/caddymanager/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

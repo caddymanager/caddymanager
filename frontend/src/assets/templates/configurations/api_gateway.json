@@ -1,0 +1,125 @@
+{
+  "id": "api-gateway",
+  "name": "API Gateway",
+  "description": "Route and manage API endpoints with JWT authentication",
+  "complexity": "advanced",
+  "category": "api",
+  "icon": "CircleStackIcon",
+  "form": {
+    "sections": [
+      {
+        "title": "API Configuration",
+        "fields": [
+          {
+            "id": "apiDomain",
+            "label": "API Domain",
+            "type": "text",
+            "placeholder": "api.example.com",
+            "description": "Domain name for the API gateway",
+            "required": true
+          },
+          {
+            "id": "listen",
+            "label": "Listen Address",
+            "type": "text",
+            "placeholder": ":80",
+            "description": "Port to listen on, e.g. :80 or :443",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Service Routes",
+        "fields": [
+          {
+            "id": "services",
+            "label": "Service Routes",
+            "type": "textarea",
+            "placeholder": "/auth/*=auth-service:3000\n/users/*=user-service:4000\n/products/*=product-service:5000",
+            "description": "Format: path=upstream, one service per line",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Security",
+        "fields": [
+          {
+            "id": "enableJwt",
+            "label": "Enable JWT Authentication",
+            "type": "toggle",
+            "description": "Add JWT authentication to all routes",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "admin": { 
+      "listen": "0.0.0.0:2019"
+    },
+    "apps": {
+      "http": {
+        "servers": {
+          "api_gateway": {
+            "listen": [":80"],
+            "routes": [
+              {
+                "match": [
+                  {
+                    "host": ["api.example.com"],
+                    "path": ["/auth/*"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                      { "dial": "auth-service:3000" }
+                    ]
+                  }
+                ],
+                "terminal": true
+              },
+              {
+                "match": [
+                  {
+                    "host": ["api.example.com"],
+                    "path": ["/users/*"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                      { "dial": "user-service:4000" }
+                    ]
+                  }
+                ],
+                "terminal": true
+              },
+              {
+                "match": [
+                  {
+                    "host": ["api.example.com"],
+                    "path": ["/products/*"]
+                  }
+                ],
+                "handle": [
+                  {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                      { "dial": "product-service:5000" }
+                    ]
+                  }
+                ],
+                "terminal": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

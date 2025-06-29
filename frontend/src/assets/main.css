@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary: rgb(195, 60, 84);    /* reddish */
+    --color-primary-dark: rgb(130, 40, 55); /* dark reddish */
+    --color-secondary: rgb(37, 78, 131);  /* dark blue */
+    --color-secondary-dark: rgb(28, 49, 85); /* darker blue */
+    --color-tertiary: rgb(55, 113, 142);  /* medium blue */
+    --color-tertiary-dark: rgb(42, 85, 107); /* dark medium blue */
+    --color-accent-1: rgb(142, 227, 239); /* light blue */
+    --color-accent-1-dark: rgb(106, 189, 200); /* medium light blue */
+    --color-accent-2: rgb(174, 243, 231); /* mint */
+    --color-accent-2-dark: rgb(130, 221, 210); /* medium mint */
+  }
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-tertiary: var(--color-tertiary);
+  --color-accent-1: var(--color-accent-1);
+  --color-accent-2: var(--color-accent-2);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-tertiary-dark: var(--color-tertiary-dark);
+  --color-accent-1-dark: var(--color-accent-1-dark);
+  --color-accent-2-dark: var(--color-accent-2-dark);
+}
