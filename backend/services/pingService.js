@@ -43,27 +43,11 @@ const pingServer = async (server) => {
     // Construct the URL to ping
     const url = `${server.apiUrl}${server.apiUrl.endsWith('/') ? '' : ':'}${server.apiPort}${server.adminApiPath}`;
     
-    // Configure request options based on auth type
+    // Configure request options (no auth)
     const requestOptions = {
       timeout: parseInt(PING_TIMEOUT, 10), // Use timeout directly as milliseconds
       validateStatus: null, // Accept any status code as a response
     };
-    
-    // Add authentication if configured
-    if (server.auth && server.auth.authType !== 'none') {
-      if (server.auth.authType === 'basic' && server.auth.username && server.auth.password) {
-        requestOptions.auth = {
-          username: server.auth.username,
-          password: server.auth.password
-        };
-        log('debug', `Using basic auth for server: ${server.name}`);
-      } else if (server.auth.authType === 'token' && server.auth.token) {
-        requestOptions.headers = {
-          'Authorization': `Bearer ${server.auth.token}`
-        };
-        log('debug', `Using token auth for server: ${server.name}`);
-      }
-    }
 
     log('debug', `Sending request to: ${url} with timeout: ${PING_TIMEOUT}ms`);
     // Send the ping request

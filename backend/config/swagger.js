@@ -39,26 +39,6 @@ const options = {
       },
     ],
     components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Enter JWT token in the format: Bearer {token}'
-        },
-        apiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'x-api-key',
-          description: 'API key authentication. Enter the API key directly without any prefix.'
-        },
-        apiKeyAuthAlt: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'ApiKey',
-          description: 'Alternative API key authentication. Enter in format: ApiKey {key}'
-        }
-      },
       schemas: {
         CaddyServer: {
           type: 'object',
@@ -93,28 +73,6 @@ const options = {
               type: 'boolean',
               description: 'Is the server active',
               example: true,
-            },
-            auth: {
-              type: 'object',
-              properties: {
-                username: {
-                  type: 'string',
-                  example: 'admin',
-                },
-                password: {
-                  type: 'string',
-                  example: 'password',
-                },
-                token: {
-                  type: 'string',
-                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-                },
-                authType: {
-                  type: 'string',
-                  enum: ['none', 'basic', 'token'],
-                  example: 'basic',
-                },
-              },
             },
             status: {
               type: 'string',
@@ -254,11 +212,7 @@ const options = {
         }
       },
     },
-    security: [
-      {
-        bearerAuth: []
-      }
-    ]
+    // Remove security section
   },
   apis: [
     './router/*.js',
