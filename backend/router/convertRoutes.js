@@ -1,8 +1,11 @@
 const express = require('express');
 const convertController = require('../controllers/convertController');
-// All routes in this file are prefixed with /api/v1/convert in the main app router
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+// Apply authentication middleware to all convert routes
+router.use(protect);
 
 /**
  * @swagger
