@@ -4,20 +4,16 @@ const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Apply authentication middleware to all Convert routes
+// Apply authentication middleware to all convert routes
 router.use(protect);
 
 /**
  * @swagger
- * /convert/caddyfile-to-json:
+ * /api/v1/convert/caddyfile-to-json:
  *   post:
  *     summary: Convert Caddyfile to JSON configuration
  *     description: Converts a Caddyfile to Caddy JSON configuration
  *     tags: [Convert]
- *     security:
- *       - bearerAuth: []
- *       - apiKeyAuth: []
- *       - apiKeyAuthAlt: []
  *     parameters:
  *       - in: query
  *         name: serverId
@@ -47,8 +43,6 @@ router.use(protect);
  *                   description: Indicates if the conversion was successful
  *       400:
  *         description: Missing or invalid input
- *       401:
- *         description: Unauthorized - invalid or missing authentication
  *       500:
  *         description: Server error
  */

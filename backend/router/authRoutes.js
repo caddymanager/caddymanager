@@ -12,7 +12,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
- * /api/auth/login:
+ * /api/v1/auth/login:
  *   post:
  *     summary: Log in to the application
  *     tags: [Authentication]
@@ -75,7 +75,7 @@ router.use(protect);
 
 /**
  * @swagger
- * /api/auth/me:
+ * /api/v1/auth/me:
  *   get:
  *     summary: Get current user's profile
  *     tags: [Authentication]
@@ -123,7 +123,7 @@ router.get('/me', authController.getCurrentUser);
 
 /**
  * @swagger
- * /api/auth/update-profile:
+ * /api/v1/auth/update-profile:
  *   put:
  *     summary: Update user profile
  *     tags: [Authentication]
@@ -161,7 +161,7 @@ router.put('/update-profile', authController.updateProfile);
 
 /**
  * @swagger
- * /api/auth/change-password:
+ * /api/v1/auth/change-password:
  *   put:
  *     summary: Change user password
  *     tags: [Authentication]
@@ -204,7 +204,7 @@ router.use(authorize('admin'));
 
 /**
  * @swagger
- * /api/auth/users:
+ * /api/v1/auth/users:
  *   get:
  *     summary: Get all users (Admin only)
  *     tags: [Authentication]
@@ -260,7 +260,7 @@ router.get('/users', authController.getAllUsers);
 
 /**
  * @swagger
- * /api/auth/update-user-role:
+ * /api/v1/auth/update-user-role:
  *   put:
  *     summary: Update user role (Admin only)
  *     tags: [Authentication]
@@ -303,7 +303,7 @@ router.put('/update-user-role', authController.updateUserRole);
 
 /**
  * @swagger
- * /api/auth/create-user:
+ * /api/v1/auth/create-user:
  *   post:
  *     summary: Create a new user (Admin only)
  *     tags: [Authentication]
@@ -353,7 +353,7 @@ router.post('/create-user', authController.createUser);
 
 /**
  * @swagger
- * /api/auth/delete-user/{userId}:
+ * /api/v1/auth/delete-user/{userId}:
  *   delete:
  *     summary: Delete a user (Admin only)
  *     tags: [Authentication]
@@ -383,5 +383,7 @@ router.post('/create-user', authController.createUser);
  *         description: Server error
  */
 router.delete('/delete-user/:userId', authController.deleteUser);
+
+// All routes in this file are prefixed with /api/v1/auth in the main app router
 
 module.exports = router;
