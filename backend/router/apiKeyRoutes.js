@@ -58,12 +58,14 @@ const router = express.Router();
  *               description: The actual API key (only returned once upon creation)
  */
 
+// All routes in this file are prefixed with /api/v1/keys in the main app router
+
 // All routes require authentication
 router.use(protect);
 
 /**
  * @swagger
- * /api/keys:
+ * /api/v1/keys:
  *   get:
  *     summary: Get all API keys belonging to the authenticated user
  *     tags: [API Keys]
@@ -154,7 +156,7 @@ router.route('/')
 
 /**
  * @swagger
- * /api/keys/{id}:
+ * /api/v1/keys/{id}:
  *   get:
  *     summary: Get a specific API key by ID
  *     tags: [API Keys]
@@ -282,7 +284,7 @@ router.route('/:id')
 
 /**
  * @swagger
- * /api/keys/admin/all:
+ * /api/v1/keys/admin/all:
  *   get:
  *     summary: Get all API keys across all users (Admin only)
  *     tags: [API Keys]
@@ -327,7 +329,7 @@ router.get('/admin/all', authorize('admin'), apiKeyController.getAllApiKeys);
 
 /**
  * @swagger
- * /api/keys/admin/revoke/{id}:
+ * /api/v1/keys/admin/revoke/{id}:
  *   put:
  *     summary: Revoke an API key (Admin only)
  *     tags: [API Keys]

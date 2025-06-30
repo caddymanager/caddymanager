@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /v1/build-info:
+ * /api/v1/build-info:
  *   get:
  *     summary: Get detailed build information
  *     description: Returns comprehensive build information including version, git details, runtime info, and system metrics
@@ -74,7 +74,7 @@ router.get('/', buildInfoController.getBuildInfo);
 
 /**
  * @swagger
- * /v1/build-info/version:
+ * /api/v1/build-info/version:
  *   get:
  *     summary: Get simplified version information
  *     description: Returns basic version and build information
@@ -119,7 +119,7 @@ router.get('/version', buildInfoController.getVersion);
 
 /**
  * @swagger
- * /v1/build-info/health:
+ * /api/v1/build-info/health:
  *   get:
  *     summary: Get health check with version info
  *     description: Returns server health status along with basic version information
@@ -167,5 +167,7 @@ router.get('/version', buildInfoController.getVersion);
  *                           example: "128 MB"
  */
 router.get('/health', buildInfoController.getHealth);
+
+// All routes in this file are prefixed with /api/v1/build-info in the main app router
 
 module.exports = router;

@@ -52,7 +52,7 @@ router.use(`${API_PREFIX}/build-info`, buildInfoRoutes);
 
 /**
  * @swagger
- * /health:
+ * /api/v1/health:
  *   get:
  *     summary: Health check endpoint
  *     description: Check if the API is running

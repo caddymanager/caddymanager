@@ -498,4 +498,6 @@ router.get('/user/:userId', (req, res, next) => {
   return authorize('admin')(req, res, next);
 }, auditLogController.getUserAuditLogs);
 
+// All routes in this file are prefixed with /api/v1/audit-logs in the main app router
+
 module.exports = router;
