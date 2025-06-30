@@ -1,7 +1,11 @@
 const express = require('express');
 const caddyController = require('../controllers/caddyController');
+const { protect } = require('../middleware/authMiddleware');
 // All routes in this file are prefixed with /api/v1/caddy in the main app router
 const router = express.Router();
+
+// Apply authentication middleware to all Caddy routes
+router.use(protect);
 
 /**
  * @swagger
