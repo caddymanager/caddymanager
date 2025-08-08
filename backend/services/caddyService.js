@@ -1,6 +1,6 @@
 const axios = require('axios');
-const CaddyServer = require('../models/caddyServersModel');
-const CaddyConfig = require('../models/caddyConfigModel');
+const caddyServersRepository = require('../repositories/caddyServersRepository');
+const caddyConfigRepository = require('../repositories/caddyConfigRepository');
 require('dotenv').config();
 
 /**
@@ -33,7 +33,7 @@ class CaddyService {
    * @returns {Promise<Array>} - Array of server objects
    */
   async getAllServers() {
-    return await CaddyServer.find({});
+    return await caddyServersRepository.find({});
   }
 
   /**
@@ -43,7 +43,7 @@ class CaddyService {
    */
   async addServer(serverData) {
     // Create new server instance
-    const newServer = new CaddyServer(serverData);
+    const newServer = { ...serverData };
     
     // Test connection before saving
     try {
@@ -54,7 +54,7 @@ class CaddyService {
       newServer.status = 'offline';
     }
     
-    return await newServer.save();
+    return await caddyServersRepository.create(newServer);
   }
 
   /**
@@ -64,7 +64,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Updated server object
    */
   async updateServer(serverId, updateData) {
-    return await CaddyServer.findByIdAndUpdate(
+    return await caddyServersRepository.findByIdAndUpdate(
       serverId, 
       updateData, 
       { new: true, runValidators: true }
@@ -77,7 +77,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Deletion result
    */
   async deleteServer(serverId) {
-    return await CaddyServer.findByIdAndDelete(serverId);
+    return await caddyServersRepository.findByIdAndDelete(serverId);
   }
 
   /**
@@ -103,7 +103,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Caddy configuration
    */
   async getConfig(serverId) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -124,7 +124,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Response from the server
    */
   async updateConfig(serverId, configData) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -153,7 +153,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Status results
    */
   async checkAllServersStatus() {
-    const servers = await CaddyServer.find({});
+    const servers = await caddyServersRepository.find({});
     const results = {
       total: servers.length,
       online: 0,
@@ -186,7 +186,7 @@ class CaddyService {
           lastPinged: server.lastPinged
         });
       }
-      await server.save();
+      await caddyServersRepository.save(server);
     }
     
     return results;
@@ -198,7 +198,7 @@ class CaddyService {
    * @returns {Promise<Object>} - Server object
    */
   async getServerById(serverId) {
-    return await CaddyServer.findById(serverId);
+    return await caddyServersRepository.findById(serverId);
   }
 
   /**
@@ -318,7 +318,7 @@ volumes:
     // If servers are specified, validate that they exist
     if (configData.servers.length > 0) {
       for (const serverId of configData.servers) {
-        const serverExists = await CaddyServer.exists({ _id: serverId });
+        const serverExists = await caddyServersRepository.exists({ _id: serverId });
         if (!serverExists) {
           throw new Error(`Server with ID ${serverId} does not exist`);
         }
@@ -343,8 +343,8 @@ volumes:
     }
     
     // Create and save the new configuration
-    const newConfig = new CaddyConfig(configData);
-    return await newConfig.save();
+    const newConfig = caddyConfigRepository.createInstance(configData);
+    return await caddyConfigRepository.save(newConfig);
   }
 
   /**
@@ -362,8 +362,8 @@ volumes:
     configData.format = 'json';
 
     // Create a new config
-    const newConfig = new CaddyConfig(configData);
-    return await newConfig.save();
+    const newConfig = caddyConfigRepository.createInstance(configData);
+    return await caddyConfigRepository.save(newConfig);
   }
 
   /**
@@ -384,7 +384,7 @@ volumes:
       query.status = options.status;
     }
     
-    return await CaddyConfig.find(query).sort({ createdAt: -1 });
+    return await caddyConfigRepository.find(query);
   }
   
   /**
@@ -393,7 +393,7 @@ volumes:
    * @returns {Promise<Object>} - Configuration object
    */
   async getConfigById(configId) {
-    return await CaddyConfig.findById(configId);
+    return await caddyConfigRepository.findById(configId);
   }
   
   /**
@@ -403,7 +403,7 @@ volumes:
    * @returns {Promise<Object>} - JSON configuration
    */
   async getJsonConfig(serverId, options = {}) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -435,7 +435,7 @@ volumes:
         // Update the server to point to this config as active if needed
         if (options.setAsActive !== false) {
           server.activeConfig = newConfig._id;
-          await server.save();
+          await caddyServersRepository.save(server);
         }
         
         // Return both the config object and the raw JSON data
@@ -459,7 +459,7 @@ volumes:
    * @returns {Promise<Object>} - Result of the operation
    */
   async applyConfigToServer(configId, serverIds = null) {
-    const config = await CaddyConfig.findById(configId);
+    const config = await caddyConfigRepository.findById(configId);
     if (!config) {
       throw new Error('Configuration not found');
     }
@@ -485,7 +485,7 @@ volumes:
     // Apply to each server
     for (const serverId of targetServerIds) {
       try {
-        const server = await CaddyServer.findById(serverId);
+        const server = await caddyServersRepository.findById(serverId);
         if (!server) {
           results.failed.push({
             serverId,
@@ -549,7 +549,7 @@ volumes:
         
         // Update the server to point to this config as active
         server.activeConfig = config._id;
-        await server.save();
+        await caddyServersRepository.save(server);
         
         // Track this server ID for response
         results.serversApplied.push(serverId);
@@ -571,7 +571,7 @@ volumes:
     
     // Save the config with updated status only if at least one server succeeded
     if (results.servers.length > 0) {
-      await config.save();
+      await caddyConfigRepository.save(config);
     }
     
     // Update overall success flag - only consider it a success if ALL servers succeeded
@@ -601,7 +601,7 @@ volumes:
    */
   async updateOtherConfigurations(serverId, activeConfigId) {
     // Find all configurations that reference this server
-    const configs = await CaddyConfig.find({
+    const configs = await caddyConfigRepository.find({
       servers: serverId,
       _id: { $ne: activeConfigId },
       status: 'live'
@@ -625,7 +625,7 @@ volumes:
         notes: `Configuration superseded by another configuration`
       });
       
-      await config.save();
+      await caddyConfigRepository.save(config);
     }
   }
 
@@ -636,7 +636,7 @@ volumes:
    * @returns {Promise<Object>} - The file content
    */
   async retrieveFileFromServer(serverId, filePath) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -668,9 +668,7 @@ volumes:
       query.servers = options.server;
     }
     
-    return await CaddyConfig.find(query)
-      .populate('servers', 'name') // Populate servers with their names
-      .sort({ createdAt: -1 });
+    return await caddyConfigRepository.find({ ...query, _populate: true });
   }
 
   /**
@@ -680,7 +678,7 @@ volumes:
    * @returns {Promise<Object>} - The stored configuration
    */
   async fetchAndStoreCurrentConfig(serverId, options = {}) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -710,7 +708,7 @@ volumes:
    * @returns {Promise<Object>} - Server status info
    */
   async checkServerStatus(serverId) {
-    const server = await CaddyServer.findById(serverId);
+    const server = await caddyServersRepository.findById(serverId);
     if (!server) {
       throw new Error('Server not found');
     }
@@ -722,7 +720,7 @@ volumes:
       const now = new Date();
       server.status = 'online';
       server.lastPinged = now;
-      await server.save();
+      await caddyServersRepository.save(server);
       
       return {
         id: server._id,
@@ -735,7 +733,7 @@ volumes:
       const now = new Date();
       server.status = 'offline';
       server.lastPinged = now;
-      await server.save();
+      await caddyServersRepository.save(server);
       
       return {
         id: server._id,
@@ -754,7 +752,7 @@ volumes:
    */
   async deleteConfig(configId) {
     try {
-      const config = await CaddyConfig.findById(configId);
+      const config = await caddyConfigRepository.findById(configId);
       
       // Check if config exists
       if (!config) {
@@ -762,18 +760,18 @@ volumes:
       }
       
       // Find all servers using this config as their active config
-      const serversUsingThisConfig = await CaddyServer.find({
+      const serversUsingThisConfig = await caddyServersRepository.find({
         activeConfig: configId
       });
       
       // Update each server to remove this as active config
       for (const server of serversUsingThisConfig) {
         server.activeConfig = null;
-        await server.save();
+        await caddyServersRepository.save(server);
       }
       
       // Delete the config
-      const deletedConfig = await CaddyConfig.findByIdAndDelete(configId);
+      const deletedConfig = await caddyConfigRepository.findByIdAndDelete(configId);
       return deletedConfig;
     } catch (error) {
       throw new Error(`Error deleting configuration: ${error.message}`);
@@ -789,7 +787,7 @@ volumes:
   async updateConfigMetadata(configId, updateData) {
     try {
       // Get the original document
-      const config = await CaddyConfig.findById(configId);
+      const config = await caddyConfigRepository.findById(configId);
       if (!config) return null;
       
       // Update only the allowed metadata fields
@@ -825,7 +823,7 @@ volumes:
       Object.assign(config, cleanUpdateData);
       
       // Save and return the updated document
-      return await config.save();
+      return await caddyConfigRepository.save(config);
     } catch (error) {
       console.error(`Error updating configuration metadata: ${error.message}`);
       throw new Error(`Failed to update configuration metadata: ${error.message}`);
@@ -841,7 +839,7 @@ volumes:
   async updateConfigContent(configId, contentData) {
     try {
       // Get the original document
-      const config = await CaddyConfig.findById(configId);
+      const config = await caddyConfigRepository.findById(configId);
       if (!config) return null;
       
       // Update the JSON content
@@ -868,7 +866,7 @@ volumes:
       });
       
       // Save and return the updated document
-      return await config.save();
+      return await caddyConfigRepository.save(config);
     } catch (error) {
       console.error(`Error updating configuration content: ${error.message}`);
       throw new Error(`Failed to update configuration content: ${error.message}`);

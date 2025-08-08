@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
+const User = require('../models/user/userMongoModel');
 const auditService = require('../services/auditService');
 
 // Environment variables - should be properly configured in production

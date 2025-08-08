@@ -1,5 +1,5 @@
 const caddyService = require('../services/caddyService');
-const CaddyServer = require('../models/caddyServersModel');
+const caddyServersRepository = require('../repositories/caddyServersRepository');
 const auditService = require('../services/auditService');
 
 /**
@@ -384,7 +384,7 @@ const caddyController = {
         
         for (const detail of results.details) {
           // Fetch the full server data to get latest timestamps
-          const serverData = await CaddyServer.findById(detail.id).lean();
+          const serverData = await caddyServersRepository.findById(detail.id);
           if (serverData) {
             enhancedDetails.push({
               ...detail,
@@ -428,7 +428,7 @@ const caddyController = {
       const statusResult = await caddyService.checkServerStatus(id);
       
       // Get complete server data to include all necessary fields for the frontend
-      const server = await CaddyServer.findById(id).lean();
+      const server = await caddyServersRepository.findById(id);
       
       if (!server) {
         return res.status(404).json({
@@ -757,7 +757,7 @@ const caddyController = {
       // Get updated server data 
       const updatedServers = [];
       for (const serverResult of result.servers) {
-        const server = await CaddyServer.findById(serverResult.serverId).lean();
+        const server = await caddyServersRepository.findById(serverResult.serverId);
         if (server) {
           updatedServers.push(server);
         }
