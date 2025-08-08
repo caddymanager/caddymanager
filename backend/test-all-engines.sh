@@ -3,6 +3,7 @@
 echo "🧪 Running Caddy Manager Repository Integration Tests"
 echo "=================================================="
 echo "📝 Test Coverage Includes:"
+echo "   • User Repository & Authentication Layer"
 echo "   • Caddy Servers Repository"
 echo "   • Caddy Config Repository" 
 echo "   • Caddy Service Integration"
