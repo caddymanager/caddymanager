@@ -1,6 +1,6 @@
 const axios = require('axios');
-const CaddyServer = require('../models/caddyServersModel');
-const CaddyConfig = require('../models/caddyConfigModel');
+const CaddyServer = require('../database/models/caddyServersModel');
+const CaddyConfig = require('../database/models/caddyConfigModel');
 require('dotenv').config();
 
 /**

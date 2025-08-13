@@ -1,5 +1,5 @@
 const caddyService = require('../services/caddyService');
-const CaddyServer = require('../models/caddyServersModel');
+const CaddyServer = require('../database/models/caddyServersModel');
 const auditService = require('../services/auditService');
 
 /**

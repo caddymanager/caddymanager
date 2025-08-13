@@ -1,4 +1,4 @@
-const AuditLog = require('../models/auditLogModel');
+const AuditLog = require('../database/models/auditLogModel');
 const mongoose = require('mongoose');
 
 /**

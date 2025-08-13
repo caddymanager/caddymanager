@@ -1,5 +1,5 @@
-const ApiKey = require('../models/apiKeyModel');
-const User = require('../models/userModel');
+const ApiKey = require('../database/models/apiKeyModel');
+const User = require('../database/models/userModel');
 const auditService = require('../services/auditService');
 
 // Create a new API key

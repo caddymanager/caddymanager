@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
-const ApiKey = require('../models/apiKeyModel');
+const User = require('../database/models/userModel');
+const ApiKey = require('../database/models/apiKeyModel');
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_for_development';

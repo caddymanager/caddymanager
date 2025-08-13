@@ -219,7 +219,7 @@ const options = {
     './controllers/*.js',
     './app.js',
     './services/*.js',
-    './models/*.js'
+    './database/models/*.js'
   ],
 };
 

@@ -29,7 +29,7 @@ const connectToMongo = async () => {
 const createDefaultAdminIfNeeded = async () => {
   try {
     // We need to require the User model here to avoid circular dependencies
-    const User = require('../models/userModel');
+    const User = require('../database/models/userModel');
     
     // Count users in the database
     const userCount = await User.countDocuments();

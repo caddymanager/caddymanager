@@ -1,4 +1,4 @@
-const Permission = require('../models/permission.model');
+const Permission = require('../database/models/permission.model');
 const logger = require('../config/logger');
 
 async function scanAndRegisterRoutes(router, basePath = '') {
