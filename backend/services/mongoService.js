@@ -1,24 +1,4 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
-
-// MongoDB connection string from environment variables or use default
-const mongoURI = process.env.MONGODB_URI || '';
-
-const connectToMongo = async () => {
-  try {
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log('Connected to MongoDB successfully');
-    
-    // Check for and create admin user if none exists
-    await createDefaultAdminIfNeeded();
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error.message);
-    process.exit(1); // Exit with failure
-  }
-};
+const connectToDatabase = require('../database/connect');
 
 /**
  * Check if any users exist in the database.
@@ -58,5 +38,6 @@ const createDefaultAdminIfNeeded = async () => {
 };
 
 module.exports = {
-  connectToMongo
+  connectToDatabase,
+  createDefaultAdminIfNeeded
 };

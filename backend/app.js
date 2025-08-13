@@ -3,7 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
-const { connectToMongo } = require('./services/mongoService');
+const { connectToDatabase, createDefaultAdminIfNeeded } = require('./services/mongoService');
 const pingService = require('./services/pingService');
 const routes = require('./router');
 
@@ -11,8 +11,11 @@ const routes = require('./router');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-connectToMongo();
+// Connect to Database and create default admin user if needed
+(async () => {
+  await connectToDatabase(); 
+  await createDefaultAdminIfNeeded();
+})();
 
 // Middleware
 app.use(cors());
