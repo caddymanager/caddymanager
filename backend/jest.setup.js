@@ -9,7 +9,7 @@ process.env.NODE_ENV = 'test';
 // Initialize SQLite service for tests
 if (process.env.DB_ENGINE === 'sqlite') {
   const sqliteService = require('./services/sqliteService');
-  // Initialize the SQLite database
+  // Initialize the SQLite database with proper schema
   sqliteService.connectToSQLite();
 }
 
@@ -24,3 +24,15 @@ if (process.env.JEST_SILENT !== 'false') {
     error: jest.fn(),
   };
 }
+
+// Global teardown for tests
+afterAll(async () => {
+  // Close database connections if needed
+  if (process.env.DB_ENGINE === 'sqlite') {
+    const sqliteService = require('./services/sqliteService');
+    const db = sqliteService.getDB();
+    if (db) {
+      db.close();
+    }
+  }
+});

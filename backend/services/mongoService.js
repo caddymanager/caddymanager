@@ -1,16 +1,25 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const dbConfig = require('../config/dbConfig');
 require('dotenv').config();
 
-// MongoDB connection string from environment variables or use default
-const mongoURI = process.env.MONGODB_URI || '';
+let mongoServer = null; // Keep reference to memory server instance
 
 const connectToMongo = async () => {
   try {
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log('Connected to MongoDB successfully');
+    if (dbConfig.isProduction && dbConfig.uri) {
+      // Production: Use real MongoDB
+      await mongoose.connect(dbConfig.uri, dbConfig.options);
+      console.log('Connected to MongoDB successfully (Production)');
+    } else {
+      // Development: Use MongoDB Memory Server
+      console.log('Starting MongoDB Memory Server for development...');
+      mongoServer = await MongoMemoryServer.create(dbConfig.memoryServerOptions);
+      const uri = mongoServer.getUri();
+      await mongoose.connect(uri, dbConfig.options);
+      console.log('Connected to MongoDB Memory Server successfully (Development)');
+      console.log(`Memory Server URI: ${uri}`);
+    }
     
     // Check for and create admin user if none exists
     await createDefaultAdminIfNeeded();
@@ -57,6 +66,25 @@ const createDefaultAdminIfNeeded = async () => {
   }
 };
 
+/**
+ * Gracefully disconnect from MongoDB and stop memory server if running
+ */
+const disconnectFromMongo = async () => {
+  try {
+    await mongoose.disconnect();
+    console.log('Disconnected from MongoDB');
+    
+    if (mongoServer) {
+      await mongoServer.stop();
+      console.log('MongoDB Memory Server stopped');
+    }
+  } catch (error) {
+    console.error('Error during MongoDB disconnect:', error.message);
+  }
+};
+
 module.exports = {
-  connectToMongo
+  connectToMongo,
+  disconnectFromMongo,
+  getMongoServer: () => mongoServer
 };

@@ -167,7 +167,8 @@ const CaddyConfigSQLiteModel = {
 	_formatRow(row) {
 		const formatted = {
 			...row,
-			_id: row.id, // Add _id for Mongoose compatibility
+			_id: String(row.id), // Convert to string and add _id for Mongoose compatibility
+			id: String(row.id), // Convert id to string for consistency
 			servers: row.servers ? JSON.parse(row.servers) : [],
 			jsonConfig: row.jsonConfig ? JSON.parse(row.jsonConfig) : {},
 			metadata: row.metadata ? JSON.parse(row.metadata) : {},

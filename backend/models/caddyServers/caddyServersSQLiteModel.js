@@ -165,8 +165,10 @@ const CaddyServersSQLiteModel = {
 	_formatRow(row) {
 		const formatted = {
 			...row,
-			_id: row.id, // Add _id for Mongoose compatibility
+			_id: String(row.id), // Convert to string and add _id for Mongoose compatibility
+			id: String(row.id), // Convert id to string for consistency
 			active: !!row.active,
+			activeConfig: row.activeConfig ? String(row.activeConfig) : null, // Convert to string for Vue components
 			tags: row.tags ? JSON.parse(row.tags) : [],
 			lastPinged: row.lastPinged ? new Date(row.lastPinged) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,

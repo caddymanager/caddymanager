@@ -43,7 +43,14 @@ const UserSQLiteModel = {
 			now.toISOString(),
 			now.toISOString()
 		);
-		return { id: info.lastInsertRowid, ...user, password: undefined, createdAt: now, updatedAt: now };
+		return { 
+			id: String(info.lastInsertRowid), 
+			_id: String(info.lastInsertRowid), 
+			...user, 
+			password: undefined, 
+			createdAt: now, 
+			updatedAt: now 
+		};
 	},
 
 	findAll({ limit = 100, offset = 0 } = {}) {
@@ -51,6 +58,8 @@ const UserSQLiteModel = {
 		const rows = db.prepare('SELECT * FROM users ORDER BY createdAt DESC LIMIT ? OFFSET ?').all(limit, offset);
 		return rows.map(row => ({
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -65,6 +74,8 @@ const UserSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -79,6 +90,8 @@ const UserSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -93,6 +106,8 @@ const UserSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -108,6 +123,8 @@ const UserSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -123,6 +140,8 @@ const UserSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			isActive: !!row.isActive,
 			lastLogin: row.lastLogin ? new Date(row.lastLogin) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -168,7 +187,7 @@ const UserSQLiteModel = {
 			return this.findById(id);
 		}
 		
-		return { id, ...updateData, updatedAt: new Date(now) };
+		return { id, _id: id, ...updateData, updatedAt: new Date(now) };
 	},
 
 	findByIdAndDelete(id) {

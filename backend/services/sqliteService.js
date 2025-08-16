@@ -22,7 +22,7 @@ const connectToSQLite = () => {
 
 // Create tables if they do not exist
 const createTablesIfNeeded = () => {
-	// Users table (updated schema to match userSQLiteModel expectations)
+	// Users table
 	db.prepare(`CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		username TEXT UNIQUE NOT NULL,
@@ -31,9 +31,24 @@ const createTablesIfNeeded = () => {
 		role TEXT NOT NULL DEFAULT 'user',
 		isActive INTEGER NOT NULL DEFAULT 1,
 		lastLogin TEXT,
-		createdAt TEXT NOT NULL,
-		updatedAt TEXT NOT NULL
+		createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+		updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
 	)`).run();
+
+	// API Keys table
+	db.prepare(`CREATE TABLE IF NOT EXISTS api_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		key TEXT UNIQUE NOT NULL,
+		userId INTEGER NOT NULL,
+		permissions TEXT NOT NULL,
+		lastUsed TEXT,
+		expiresAt TEXT,
+		createdAt TEXT NOT NULL,
+		isActive INTEGER NOT NULL DEFAULT 1,
+		FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+	)`).run();
+
 	// Add more table creation statements here as needed
 };
 
@@ -52,9 +67,8 @@ const createDefaultAdminIfNeeded = () => {
 			const rawPassword = 'caddyrocks';
 			const hashedPassword = bcrypt.hashSync(rawPassword, 10);
 			const now = new Date().toISOString();
-			
-			db.prepare(`INSERT INTO users (username, email, password, role, isActive, lastLogin, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-				.run(username, null, hashedPassword, 'admin', 1, null, now, now);
+			db.prepare(`INSERT INTO users (username, email, password, role, isActive, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+				.run(username, null, hashedPassword, 'admin', 1, now, now);
 			console.log('Default admin user created successfully.');
 			console.log(`Username: ${username}`);
 			console.log('Password: [hidden]');

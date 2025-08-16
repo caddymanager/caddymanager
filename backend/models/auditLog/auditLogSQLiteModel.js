@@ -43,7 +43,7 @@ const AuditLogSQLiteModel = {
 			now.toISOString(),
 			now.toISOString()
 		);
-		return { id: info.lastInsertRowid, ...log, createdAt: now, updatedAt: now };
+		return { id: info.lastInsertRowid, _id: info.lastInsertRowid, ...log, createdAt: now, updatedAt: now };
 	},
 
 	findAll({ limit = 100, offset = 0 } = {}) {
@@ -51,6 +51,7 @@ const AuditLogSQLiteModel = {
 		const rows = db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT ? OFFSET ?').all(limit, offset);
 		return rows.map(row => ({
 			...row,
+			_id: row.id, // Add _id for MongoDB compatibility
 			details: row.details ? JSON.parse(row.details) : {},
 			timestamp: row.timestamp ? new Date(row.timestamp) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -64,6 +65,8 @@ const AuditLogSQLiteModel = {
 		if (!row) return null;
 		return {
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			details: row.details ? JSON.parse(row.details) : {},
 			timestamp: row.timestamp ? new Date(row.timestamp) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -77,6 +80,8 @@ const AuditLogSQLiteModel = {
 			.all(resourceType, resourceId, limit, offset);
 		return rows.map(row => ({
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			details: row.details ? JSON.parse(row.details) : {},
 			timestamp: row.timestamp ? new Date(row.timestamp) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
@@ -90,6 +95,8 @@ const AuditLogSQLiteModel = {
 			.all(userId, limit, offset);
 		return rows.map(row => ({
 			...row,
+			_id: String(row.id), // Convert to string and add _id for MongoDB compatibility
+			id: String(row.id), // Convert id to string for consistency
 			details: row.details ? JSON.parse(row.details) : {},
 			timestamp: row.timestamp ? new Date(row.timestamp) : null,
 			createdAt: row.createdAt ? new Date(row.createdAt) : null,
