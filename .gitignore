@@ -64,4 +64,9 @@ test-output/
 # Exclude by convention
 !README.md
 
+# SQLite database files
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # End of .gitignore
