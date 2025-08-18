@@ -1,5 +1,4 @@
-const ApiKey = require('../models/apiKeyModel');
-const User = require('../models/userModel');
+const apiKeyRepository = require('../repositories/apiKeyRepository');
 const auditService = require('../services/auditService');
 
 // Create a new API key
@@ -28,7 +27,7 @@ exports.createApiKey = async (req, res) => {
     }
     
     // Create the API key
-    const apiKey = await ApiKey.createApiKey(
+    const apiKey = await apiKeyRepository.createApiKey(
       req.user.id,
       name,
       permissions,
@@ -76,9 +75,7 @@ exports.createApiKey = async (req, res) => {
 // Get all API keys for a user
 exports.getApiKeys = async (req, res) => {
   try {
-    const apiKeys = await ApiKey.find({ userId: req.user.id })
-      .select('-key') // Don't return the actual key
-      .sort({ createdAt: -1 });
+    const apiKeys = await apiKeyRepository.findByUserId(req.user.id);
     
     res.status(200).json({
       success: true,
@@ -97,10 +94,10 @@ exports.getApiKeys = async (req, res) => {
 // Get a single API key by ID
 exports.getApiKey = async (req, res) => {
   try {
-    const apiKey = await ApiKey.findOne({
+    const apiKey = await apiKeyRepository.findOne({
       _id: req.params.id,
       userId: req.user.id
-    }).select('-key');
+    });
     
     if (!apiKey) {
       return res.status(404).json({
@@ -132,11 +129,11 @@ exports.updateApiKey = async (req, res) => {
     if (permissions) updateData.permissions = permissions;
     if (isActive !== undefined) updateData.isActive = isActive;
     
-    const apiKey = await ApiKey.findOneAndUpdate(
+    const apiKey = await apiKeyRepository.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       updateData,
       { new: true, runValidators: true }
-    ).select('-key');
+    );
     
     if (!apiKey) {
       return res.status(404).json({
@@ -177,7 +174,7 @@ exports.updateApiKey = async (req, res) => {
 // Delete an API key
 exports.deleteApiKey = async (req, res) => {
   try {
-    const apiKey = await ApiKey.findOneAndDelete({
+    const apiKey = await apiKeyRepository.findOneAndDelete({
       _id: req.params.id,
       userId: req.user.id
     });
@@ -219,10 +216,7 @@ exports.deleteApiKey = async (req, res) => {
 // Admin: Get all API keys
 exports.getAllApiKeys = async (req, res) => {
   try {
-    const apiKeys = await ApiKey.find()
-      .select('-key')
-      .populate('userId', 'username email')
-      .sort({ createdAt: -1 });
+    const apiKeys = await apiKeyRepository.findAllWithUsers();
     
     res.status(200).json({
       success: true,
@@ -241,11 +235,11 @@ exports.getAllApiKeys = async (req, res) => {
 // Revoke an API key (admin only)
 exports.revokeApiKey = async (req, res) => {
   try {
-    const apiKey = await ApiKey.findByIdAndUpdate(
+    const apiKey = await apiKeyRepository.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
       { new: true }
-    ).select('-key');
+    );
     
     if (!apiKey) {
       return res.status(404).json({

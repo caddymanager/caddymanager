@@ -1,5 +1,5 @@
 services:
-  # MongoDB database for persistent storage
+  # MongoDB database for persistent storage (optional - SQLite is used by default)
   mongodb:
     image: mongo:8.0
     container_name: caddymanager-mongodb
@@ -13,16 +13,21 @@ services:
       - mongodb_data:/data/db
     networks:
       - caddymanager
+    profiles:
+      - mongodb  # Use 'docker-compose --profile mongodb up' to include MongoDB
 
   # Backend API server
   backend:
     image: caddymanager/caddymanager-backend:latest
     container_name: caddymanager-backend
     restart: unless-stopped
-    depends_on:
-      - mongodb
     environment:
       - PORT=3000
+      # Database Engine Configuration (defaults to SQLite)
+      - DB_ENGINE=sqlite  # Options: 'sqlite' or 'mongodb'
+      # SQLite Configuration (used when DB_ENGINE=sqlite)
+      - SQLITE_DB_PATH=/app/data/caddymanager.sqlite
+      # MongoDB Configuration (used when DB_ENGINE=mongodb)
       - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
       - CORS_ORIGIN=http://localhost:5173
       - LOG_LEVEL=debug
@@ -35,6 +40,8 @@ services:
       - JWT_EXPIRATION=24h
     ports:
       - "3000:3000"  # Expose API
+    volumes:
+      - sqlite_data:/app/data  # SQLite database storage
     networks:
       - caddymanager
 
@@ -59,10 +66,12 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
+  mongodb_data:  # Only used when MongoDB profile is active
+  sqlite_data:   # SQLite database storage
 
 # Notes:
+# - SQLite is the default database engine - no additional setup required!
+# - To use MongoDB instead, set DB_ENGINE=mongodb and start with: docker-compose --profile mongodb up
 # - For production, use strong passwords and consider secrets management.
-# - The backend connects to MongoDB using the service name 'mongodb'.
-# - The frontend connects to the backend using the service name 'backend'.
+# - The backend uses SQLite by default, storing data in a persistent volume.
 # - Remove or restrict published ports in production environments.

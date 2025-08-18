@@ -97,8 +97,19 @@ export const useCaddyServersStore = defineStore('caddyServers', () => {
       const response = await apiService.get(`/caddy/servers/${id}`)
       // Handle the API response format: { success, data }
       if (response.data && response.data.success) {
-        currentServer.value = response.data.data
-        return response.data.data
+        const serverData = response.data.data
+        currentServer.value = serverData
+        
+        // Also update the servers array if the server exists there
+        const index = servers.value.findIndex(server => server._id == id)
+        if (index !== -1) {
+          servers.value[index] = serverData
+        } else {
+          // If server doesn't exist in array, add it
+          servers.value.push(serverData)
+        }
+        
+        return serverData
       }
       return null
     } catch (err) {

@@ -277,16 +277,6 @@ const showPagination = computed(() => totalPages.value > 1);
       </div>
     </div>
     
-    <!-- No results message when no logs and no filters -->
-    <div 
-      v-if="!isLoading && !error && logs.length === 0 && !Object.values(filters).some(v => v)"
-      class="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mt-4"
-    >
-      <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400" />
-      <h3 class="mt-2 text-sm font-semibold text-gray-900">No audit logs found</h3>
-      <p class="mt-1 text-sm text-gray-500">No audit log entries have been recorded yet.</p>
-    </div>
-    
     <!-- Details modal -->
     <ModalAuditLogDetailsComp
       v-if="selectedLog"

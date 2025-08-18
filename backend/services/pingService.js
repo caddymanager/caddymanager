@@ -1,5 +1,5 @@
 const axios = require('axios');
-const CaddyServer = require('../models/caddyServersModel');
+const CaddyServer = require('../models/caddyServers');
 
 // Environment variables
 const PING_INTERVAL = process.env.PING_INTERVAL || 300000; // Default to 5 minutes (300000 ms) if not set

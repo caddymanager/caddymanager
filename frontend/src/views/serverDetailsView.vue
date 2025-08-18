@@ -66,7 +66,10 @@ const serversStore = useCaddyServersStore()
 
 const error = ref(null)
 const isLoading = computed(() => serversStore.isLoading)
-const server = computed(() => serversStore.getServerById(props.id))
+const server = computed(() => {
+  // First try to get from servers array, then fall back to currentServer
+  return serversStore.getServerById(props.id) || serversStore.currentServer
+})
 
 // Function to fetch server data
 const fetchServerData = async () => {

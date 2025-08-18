@@ -3,7 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
-const { connectToMongo } = require('./services/mongoService');
+const { connectToMongo, disconnectFromMongo } = require('./services/mongoService');
+const { connectToSQLite } = require('./services/sqliteService');
 const pingService = require('./services/pingService');
 const routes = require('./router');
 
@@ -11,8 +12,19 @@ const routes = require('./router');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-connectToMongo();
+
+// Select and connect to the configured database engine
+const DB_ENGINE = process.env.DB_ENGINE || 'sqlite';
+if (DB_ENGINE === 'mongodb') {
+  connectToMongo();
+  console.log('Using MongoDB as the database engine.');
+} else if (DB_ENGINE === 'sqlite') {
+  connectToSQLite();
+  console.log('Using SQLite as the database engine.');
+} else {
+  console.error(`Unknown DB_ENGINE: ${DB_ENGINE}`);
+  process.exit(1);
+}
 
 // Middleware
 app.use(cors());
@@ -54,17 +66,26 @@ app.use((req, res) => {
   });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Caddy Manager API server listening on port ${PORT}`);
-  console.log(`Ping service is running: ${pingService.getPingServiceStatus().running}`);
-});
+// Start the server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Caddy Manager API server listening on port ${PORT}`);
+    console.log(`Ping service is running: ${pingService.getPingServiceStatus().running}`);
+  });
+}
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Shutting down server...');
   pingService.stopPingService();
   console.log('Ping service stopped');
+  
+  // Disconnect from database
+  const DB_ENGINE = process.env.DB_ENGINE || 'sqlite';
+  if (DB_ENGINE === 'mongodb') {
+    await disconnectFromMongo();
+  }
+  
   process.exit(0);
 });
 
