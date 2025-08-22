@@ -59,6 +59,15 @@
                 <button
                   type="button"
                   class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
+                  :class="editMode === 'ace' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                  @click="editMode = 'ace'"
+                >
+                  <CodeBracketSquareIcon class="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                  Raw JSON (Ace)
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
                   :class="editMode === 'template' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
                   @click="editMode = 'template'"
                 >
@@ -129,6 +138,30 @@
             </div>
             <p class="mt-1 text-xs text-gray-500">
               Edit the JSON configuration directly. Changes will be saved when you click "Save Changes".
+            </p>
+          </div>
+          
+          <!-- Ace Editor Mode -->
+          <div v-if="editMode === 'ace'" class="mb-4">
+            <label class="block text-sm font-medium text-tertiary mb-2">Raw JSON (Ace Editor)</label>
+            <ace-editor-sub-comp
+              :modelValue="aceEditorContent"
+              @update:modelValue="onAceEditorInput"
+              mode="json"
+              theme="monokai"
+              :minLines="12"
+              :maxLines="40"
+              :readOnly="false"
+              blur="xl"
+              rounded="lg"
+              opacity="strong"
+              variant="primary"
+            />
+            <div v-if="aceJsonError" class="bg-red-50 border-t border-red-200 p-2 text-xs text-red-700">
+              {{ aceJsonError }}
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              Edit the raw JSON directly. Changes will be synced to the main configuration.
             </p>
           </div>
           
@@ -660,6 +693,7 @@ import VueJsonPretty from 'vue-json-pretty'
 import 'vue-json-pretty/lib/styles.css'
 import { RouterLink, useRouter } from 'vue-router'
 import { Vue3JsonEditor } from 'vue3-json-editor'
+import aceEditorSubComp from '@/components/util/aceEditorSubComp.vue'
 import apiService from '@/services/apiService'
 import templateService from '@/services/templateService'
 import ModalFormComp from '@/components/modals/modalFormComp.vue'
@@ -727,33 +761,43 @@ const isSaving = ref(false)
 const saveSuccess = ref(false)
 const jsonEditorContent = ref({})
 const jsonValidationError = ref(null)
+// Ace Editor state
+const aceEditorContent = ref('')
+const aceJsonError = ref(null)
 
-// JSON editor configuration options
-const editorOptions = {
-  mode: 'tree',
-  mainMenuBar: true,
-  navigationBar: true,
-  statusBar: true,
-  colorPicker: true,
-}
+// Sync Ace editor with JSON editor
+watch([jsonEditorContent, () => editMode.value], ([val, mode]) => {
+  if (mode === 'ace') {
+    aceEditorContent.value = JSON.stringify(val, null, 2)
+  }
+})
 
-// Handle JSON changes from the editor
-function onJsonChange(value) {
-  jsonValidationError.value = null
-  
-  // Store the updated JSON in our local state
-  jsonEditorContent.value = value
-  
-  // Emit the JSON content and validation status to the parent component
-  emit('json-content-updated', value)
-  emit('json-validation', true)
-}
-
-// Handle JSON errors from the editor
 function onJsonError(error) {
-  jsonValidationError.value = error ? `JSON Error: ${error.message || 'Invalid JSON'}` : null
-  // Also emit validation status to parent
+  jsonValidationError.value = error
   emit('json-validation', !error)
+}
+
+function onJsonChange(value) {
+  jsonEditorContent.value = value
+  emit('json-content-updated', value)
+}
+
+function onAceJsonError(error) {
+  aceJsonError.value = error
+  emit('json-validation', !error)
+}
+
+function onAceEditorInput(val) {
+  aceEditorContent.value = val
+  if (editMode.value === 'ace') {
+    try {
+      const parsed = JSON.parse(val)
+      jsonEditorContent.value = parsed
+      emit('json-content-updated', parsed)
+    } catch (e) {
+      // Ignore until valid
+    }
+  }
 }
 
 // Get the configuration content
