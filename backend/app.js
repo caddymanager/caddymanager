@@ -27,7 +27,11 @@ if (DB_ENGINE === 'mongodb') {
 }
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.text({ limit: '50mb', type: 'text/plain' })); // Add text parser middleware
 app.use(express.urlencoded({ extended: true }));
