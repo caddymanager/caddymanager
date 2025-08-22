@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: caddymanager/caddymanager-backend:latest
+    container_name: caddymanager-backend
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      # Database Engine Configuration (defaults to SQLite)
+      - DB_ENGINE=sqlite  # Options: 'sqlite' or 'mongodb'
+      # SQLite Configuration (used when DB_ENGINE=sqlite)
+      - SQLITE_DB_PATH=/app/data/caddymanager.sqlite
+      # MongoDB Configuration (used when DB_ENGINE=mongodb)
+      - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
+      - CORS_ORIGIN=http://localhost:80
+      - LOG_LEVEL=debug
+      - CADDY_SANDBOX_URL=http://localhost:2019
+      - PING_INTERVAL=30000
+      - PING_TIMEOUT=2000
+      - AUDIT_LOG_MAX_SIZE_MB=100
+      - AUDIT_LOG_RETENTION_DAYS=90
+      - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
+      - JWT_EXPIRATION=24h
+    volumes:
+      - sqlite_data:/app/data
+    networks:
+      - caddymanager
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: caddymanager/caddymanager-frontend:latest
+    container_name: caddymanager-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_HOST=backend:3000
+      - APP_NAME=Caddy Manager
+      - DARK_MODE=true
+    ports:
+      - "80:80"
+    networks:
+      - caddymanager
+
+networks:
+  caddymanager:
+    driver: bridge
+
+volumes:
+  sqlite_data:

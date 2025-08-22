@@ -2,10 +2,14 @@
     handle /config {
         header Content-Type "application/json"
         respond `{
-            "api_base_url": "{$API_BASE_URL}",
+            "api_base_url": "/api/v1",
             "app_name": "{$APP_NAME}",
             "enable_dark_mode": "{$DARK_MODE}"
         }`
+    }
+
+    handle /api/* {
+        reverse_proxy {$BACKEND_HOST:localhost:3000}
     }
 
     handle {

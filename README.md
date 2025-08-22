@@ -39,7 +39,7 @@ This project is in active development, gearing up for a v0.1 release. Feedback a
 
 ## 🐳 Docker Compose Example
 
-Below is a sample `docker-compose.yml` for running both backend and frontend. CaddyManager uses SQLite by default for zero-configuration setup, but you can optionally use MongoDB:
+Below is the updated `docker-compose.yml` for running both backend and frontend. CaddyManager uses SQLite by default for zero-configuration setup, but you can optionally use MongoDB:
 
 ```yaml
 services:
@@ -73,7 +73,7 @@ services:
       - SQLITE_DB_PATH=/app/data/caddymanager.sqlite
       # MongoDB Configuration (used when DB_ENGINE=mongodb)
       - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=http://localhost:80
       - LOG_LEVEL=debug
       - CADDY_SANDBOX_URL=http://localhost:2019
       - PING_INTERVAL=30000
@@ -82,8 +82,7 @@ services:
       - AUDIT_LOG_RETENTION_DAYS=90
       - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
       - JWT_EXPIRATION=24h
-    ports:
-      - "3000:3000"  # Expose API
+    # Backend is now only accessible through frontend proxy
     volumes:
       - sqlite_data:/app/data  # SQLite database storage
     networks:
@@ -97,7 +96,7 @@ services:
     depends_on:
       - backend
     environment:
-      - API_BASE_URL=http://backend:3000/api/v1
+      - BACKEND_HOST=backend:3000
       - APP_NAME=Caddy Manager
       - DARK_MODE=true
     ports:
@@ -118,7 +117,8 @@ volumes:
 # - To use MongoDB instead, set DB_ENGINE=mongodb and start with: docker-compose --profile mongodb up
 # - For production, use strong passwords and consider secrets management.
 # - The backend uses SQLite by default, storing data in a persistent volume.
-# - Remove or restrict published ports in production environments.
+# - The frontend proxies all /api/* requests to the backend service.
+# - Backend is not directly exposed - all API access goes through the frontend proxy.
 ```
 
 ---
