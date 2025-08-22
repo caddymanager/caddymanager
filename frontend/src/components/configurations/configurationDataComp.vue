@@ -62,7 +62,7 @@
                   :class="editMode === 'ace' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
                   @click="editMode = 'ace'"
                 >
-                  <CodeBracketSquareIcon class="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                  <CodeBracketIcon class="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   Raw JSON (Ace)
                 </button>
                 <button
@@ -706,6 +706,7 @@ import {
   ExclamationTriangleIcon,
   PencilIcon,
   ServerIcon,
+  CodeBracketIcon,
   GlobeAltIcon,
   DocumentTextIcon,
   ShieldCheckIcon,
