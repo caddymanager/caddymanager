@@ -24,6 +24,15 @@
                 <button
                   type="button"
                   class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
+                  :class="editMode === 'ace' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                  @click="editMode = 'ace'"
+                >
+                  <CodeBracketIcon class="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                  Raw JSON (Ace)
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
                   :class="editMode === 'template' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
                   @click="editMode = 'template'"
                 >
@@ -85,6 +94,26 @@
             </div>
             <p class="mt-1 text-xs text-gray-500">
               Edit the JSON configuration directly. Changes will be saved when you click "Create Configuration".
+            </p>
+          </div>
+
+          <!-- Ace Editor Mode -->
+          <div v-if="editMode === 'ace'" class="mb-4">
+            <label class="block text-sm font-medium text-tertiary mb-2">Raw JSON (Ace Editor)</label>
+            <ace-editor-sub-comp
+              :modelValue="aceEditorContent"
+              @update:modelValue="onAceEditorInput"
+              mode="json"
+              theme="monokai"
+              :minLines="12"
+              :maxLines="40"
+              :readOnly="false"
+            />
+            <div v-if="aceJsonError" class="bg-red-50 border-t border-red-200 p-2 text-xs text-red-700">
+              {{ aceJsonError }}
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              Edit the raw JSON directly. Changes will be synced to the main configuration.
             </p>
           </div>
           
@@ -472,6 +501,7 @@ example.com {
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import aceEditorSubComp from '@/components/util/aceEditorSubComp.vue'
 import { useCaddyConfigsStore } from '@/stores/caddyConfigsStore'
 import { useCaddyServersStore } from '@/stores/caddyServersStore'
 import VueJsonPretty from 'vue-json-pretty'
@@ -507,6 +537,7 @@ import {
   DocumentPlusIcon
 } from '@heroicons/vue/24/outline'
 
+
 const emit = defineEmits(['json-content-updated', 'json-validation'])
 
 const router = useRouter()
@@ -533,6 +564,31 @@ const jsonEditorContent = ref({
   }
 })
 const jsonValidationError = ref(null)
+
+// Ace Editor state (must be after jsonEditorContent and editMode)
+const aceEditorContent = ref('')
+const aceJsonError = ref(null)
+
+// Sync Ace editor with JSON editor
+watch([jsonEditorContent, editMode], ([val, mode]) => {
+  if (mode === 'ace') {
+    aceEditorContent.value = JSON.stringify(val, null, 2)
+  }
+})
+
+function onAceEditorInput(val) {
+  aceEditorContent.value = val
+  if (editMode.value === 'ace') {
+    try {
+      const parsed = JSON.parse(val)
+      jsonEditorContent.value = parsed
+      emit('json-content-updated', parsed)
+      aceJsonError.value = null
+    } catch (e) {
+      aceJsonError.value = 'Invalid JSON: ' + e.message
+    }
+  }
+}
 
 // Handle JSON changes from the editor
 function onJsonChange(value) {
@@ -960,13 +1016,11 @@ function useConversionResult() {
 const duplicateEntries = ref([])
 
 function checkForDuplicates() {
+  // Ensure duplicateEntries is always an array
   duplicateEntries.value = []
 
-  // For a new configuration, this mostly checks the current
-  // edited JSON content
   try {
     const config = jsonEditorContent.value;
-    
     // Example check for duplicate hostnames
     const hostnames = new Set()
     const duplicates = []
@@ -974,7 +1028,6 @@ function checkForDuplicates() {
     // Check for hosts in HTTP servers routes
     if (config?.apps?.http?.servers) {
       const servers = config.apps.http.servers;
-      
       Object.values(servers).forEach(server => {
         if (server.routes && Array.isArray(server.routes)) {
           server.routes.forEach(route => {
