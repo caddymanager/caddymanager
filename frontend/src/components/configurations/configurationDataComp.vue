@@ -706,7 +706,6 @@ import {
   ExclamationTriangleIcon,
   PencilIcon,
   ServerIcon,
-  CodeBracketIcon,
   GlobeAltIcon,
   DocumentTextIcon,
   ShieldCheckIcon,
