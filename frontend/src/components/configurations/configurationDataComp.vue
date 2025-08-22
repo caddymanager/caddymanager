@@ -527,7 +527,7 @@ example.com {
             v-model="proxyForm.hostname" 
             type="text" 
             placeholder="example.com"
-            class="placeholder:text-gray-300 text-tertiary block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 text-tertiary block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">The domain name for this proxy.</p>
         </div>
@@ -537,7 +537,7 @@ example.com {
             v-model="proxyForm.listen" 
             type="text" 
             placeholder=":80"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">Port to listen on, e.g. :80 or :443</p>
         </div>
@@ -561,7 +561,7 @@ example.com {
             v-model="target.dial" 
             type="text" 
             placeholder="localhost:8080"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <button 
             type="button"
@@ -584,7 +584,7 @@ example.com {
               v-model="proxyForm.pathPrefix" 
               type="text" 
               placeholder="/api/*"
-              class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
             <p class="mt-1 text-xs text-gray-500">Limit proxy to a specific path.</p>
           </div>
@@ -642,7 +642,7 @@ example.com {
                 v-model="templateCustomization[field.id]" 
                 type="text" 
                 :placeholder="field.placeholder"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 :required="field.required"
               />
               
@@ -651,7 +651,7 @@ example.com {
                 v-model="templateCustomization[field.id]" 
                 :placeholder="field.placeholder"
                 rows="3"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
+                class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
                 :required="field.required"
               ></textarea>
               

@@ -19,7 +19,7 @@
             id="serverName"
             v-model="formData.name"
             type="text"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="Production Server"
             maxlength="50"
             @input="validateForm"
@@ -33,7 +33,7 @@
           <textarea
             id="serverDescription"
             v-model="formData.description"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="Main production Caddy server"
             rows="2"
             maxlength="200"
@@ -47,7 +47,7 @@
             id="serverTags"
             v-model="tagsInput"
             type="text"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="production, web, europe (comma-separated)"
           />
           <p class="mt-1 text-xs text-tertiary/70">Enter comma-separated tags to categorize your server.</p>
@@ -79,7 +79,7 @@
             id="serverUrl"
             v-model="formData.apiUrl"
             type="text"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="http://localhost"
             @input="validateForm"
           />
@@ -94,7 +94,7 @@
             id="apiPort"
             v-model.number="formData.apiPort"
             type="number"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="2019"
             min="1"
             max="65535"
@@ -111,7 +111,7 @@
             id="adminApiPath"
             v-model="formData.adminApiPath"
             type="text"
-            class="placeholder:text-gray-300 text-tertiary/70 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="/config/"
           />
           <p class="mt-1 text-xs text-tertiary/70">The API path (default: /config/)</p>

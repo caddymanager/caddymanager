@@ -20,7 +20,7 @@
           id="username" 
           v-model="form.username" 
           required 
-          class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.username }"
           placeholder="Enter username"
         >
@@ -36,7 +36,7 @@
           type="email" 
           id="email" 
           v-model="form.email" 
-          class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.email }"
           placeholder="Enter email (optional)"
         >
@@ -52,7 +52,7 @@
           id="password" 
           v-model="form.password" 
           required 
-          class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.password }"
           placeholder="Enter password"
         >
@@ -69,7 +69,7 @@
           id="confirmPassword" 
           v-model="form.confirmPassword" 
           required 
-          class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': passwordsDoNotMatch }"
           placeholder="Confirm password"
         >
