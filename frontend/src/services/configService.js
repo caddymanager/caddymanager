@@ -29,7 +29,7 @@ function getConfigValue(key, envVar, fallback) {
 
 // API Configuration
 export function getApiBaseUrl() {
-  return getConfigValue('api_base_url', 'VITE_API_BASE_URL', 'http://localhost:3000/api/v1')
+  return getConfigValue('api_base_url', 'VITE_API_BASE_URL', '/api/v1')
 }
 
 // Application Settings

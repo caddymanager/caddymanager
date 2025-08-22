@@ -1,6 +1,7 @@
 FROM node:alpine
 
 RUN mkdir -p /usr/src/node-app && chown -R node:node /usr/src/node-app
+RUN mkdir -p /app/data && chown -R node:node /app/data
 
 # Install PM2 globally before switching to node user
 RUN npm install pm2 -g
