@@ -1,5 +1,6 @@
 import axios from 'axios'
 import config from './configService'
+import router from '@/router'
 
 /**
  * Returns a preconfigured axios instance for API calls
@@ -32,7 +33,35 @@ function getApiClient() {
       if (error.response) {
         switch (error.response.status) {
           case 401:
-            console.error('Unauthorized access, please login')
+            // Unauthorized: clear auth via authService and redirect to login
+            console.error('Unauthorized access, logging out and redirecting to login')
+            // Use dynamic import of the Pinia auth store so its state is updated
+            // (authStore.logout() calls authService.logout() internally)
+            import('@/stores/authStore')
+              .then((m) => {
+                try {
+                  const useAuthStore = m.useAuthStore
+                  if (useAuthStore) {
+                    const authStore = useAuthStore()
+                    if (authStore && typeof authStore.logout === 'function') {
+                      authStore.logout()
+                    }
+                  }
+                } catch (e) {
+                  // ignore errors from store logout
+                }
+              })
+              .catch(() => {})
+
+            try {
+              const current = router && router.currentRoute && router.currentRoute.value
+              if (!current || current.name !== 'login') {
+                router.push({ name: 'login' })
+              }
+            } catch (e) {
+              // ignore routing errors
+            }
+
             break
           case 403:
             console.error('Forbidden access')
