@@ -7,6 +7,8 @@ import {
   ChevronUpIcon, 
   ChevronDownIcon 
 } from '@heroicons/vue/24/outline';
+import InputFieldComp from '../util/inputFieldComp.vue';
+import SelectFieldComp from '../util/selectFieldComp.vue';
 
 const props = defineProps({
   filterOptions: {
@@ -93,6 +95,16 @@ const hasActiveFilters = computed(() => {
   return Object.values(localFilters.value).some(val => val !== null && val !== '');
 });
 
+// Computed option lists for SelectFieldComp
+const actionOptions = computed(() => (props.filterOptions.actions || []).map(a => {
+  const label = a.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  return { value: a, label };
+}));
+
+const resourceTypeOptions = computed(() => (props.filterOptions.resourceTypes || []).map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })));
+
+const userOptions = computed(() => (props.filterOptions.users || []).map(u => ({ value: u.userId, label: `${u.username} (${u.count} entries)` })));
+
 // Methods
 const toggleFilters = () => {
   showFilters.value = !showFilters.value;
@@ -168,70 +180,59 @@ const refreshOptions = () => {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Action filter -->
         <div>
-          <label for="action" class="block text-sm font-medium text-gray-700 mb-1">Action</label>
-          <select
+          <SelectFieldComp
             id="action"
             v-model="localFilters.action"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
-          >
-            <option :value="null">All actions</option>
-            <option v-for="action in filterOptions.actions" :key="action" :value="action">
-              {{ action.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') }}
-            </option>
-          </select>
+            :options="actionOptions"
+            label="Action"
+            placeholder="All actions"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+          />
         </div>
         
         <!-- Resource type filter -->
         <div>
-          <label for="resourceType" class="block text-sm font-medium text-gray-700 mb-1">Resource Type</label>
-          <select
+          <SelectFieldComp
             id="resourceType"
             v-model="localFilters.resourceType"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
-          >
-            <option :value="null">All resource types</option>
-            <option v-for="type in filterOptions.resourceTypes" :key="type" :value="type">
-              {{ type.charAt(0).toUpperCase() + type.slice(1) }}
-            </option>
-          </select>
+            :options="resourceTypeOptions"
+            label="Resource Type"
+            placeholder="All resource types"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+          />
         </div>
         
         <!-- Resource ID filter -->
         <div>
-          <label for="resourceId" class="block text-sm font-medium text-gray-700 mb-1">Resource ID</label>
-          <input
+          <InputFieldComp
             id="resourceId"
             v-model="localFilters.resourceId"
-            type="text"
+            label="Resource ID"
             placeholder="Enter resource ID"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
           />
         </div>
         
         <!-- User filter -->
         <div>
-          <label for="userId" class="block text-sm font-medium text-gray-700 mb-1">User</label>
-          <select
+          <SelectFieldComp
             id="userId"
             v-model="localFilters.userId"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
-          >
-            <option :value="null">All users</option>
-            <option v-for="user in filterOptions.users" :key="user.userId" :value="user.userId">
-              {{ user.username }} ({{ user.count }} entries)
-            </option>
-          </select>
+            :options="userOptions"
+            label="User"
+            placeholder="All users"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+          />
         </div>
         
         <!-- Username filter (alternative to userId) -->
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <input
+          <InputFieldComp
             id="username"
             v-model="localFilters.username"
-            type="text"
+            label="Username"
             placeholder="Enter username"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
           />
         </div>
         
@@ -251,21 +252,21 @@ const refreshOptions = () => {
       <!-- Date range filters -->
       <div v-show="showDateFilters" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 pt-2 border-t border-gray-100">
         <div>
-          <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-          <input
+          <InputFieldComp
             id="startDate"
             v-model="formattedStartDate"
+            label="Start Date"
             type="date"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
           />
         </div>
         <div>
-          <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-          <input
+          <InputFieldComp
             id="endDate"
             v-model="formattedEndDate"
+            label="End Date"
             type="date"
-            class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+            extraClass="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
           />
         </div>
       </div>

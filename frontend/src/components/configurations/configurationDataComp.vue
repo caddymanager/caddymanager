@@ -298,17 +298,13 @@ example.com {
                   </button>
                   
                   <div>
-                    <label for="serverSelect" class="sr-only">Select Caddy Server</label>
-                    <select
-                      id="serverSelect"
-                      v-model="selectedServerId"
-                      class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6"
-                    >
-                      <option value="">Default Sandbox</option>
-                      <option v-for="server in servers" :key="server._id" :value="server._id">
-                        {{ server.name }}
-                      </option>
-                    </select>
+                      <label for="serverSelect" class="sr-only">Select Caddy Server</label>
+                      <SelectFieldComp
+                        id="serverSelect"
+                        v-model="selectedServerId"
+                        :options="[{ value: '', label: 'Default Sandbox' }, ...(servers.map(s => ({ value: s._id, label: s.name })))]"
+                        extraClass="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6"
+                      />
                   </div>
                 </div>
                 
@@ -522,22 +518,20 @@ example.com {
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex flex-col mb-2">
-          <label class="block text-sm font-medium text-tertiary mb-1">Hostname</label>
-          <input 
-            v-model="proxyForm.hostname" 
-            type="text" 
+          <InputFieldComp
+            v-model="proxyForm.hostname"
+            label="Hostname"
             placeholder="example.com"
-            class="placeholder:text-gray-300 text-tertiary block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">The domain name for this proxy.</p>
         </div>
         <div class="flex flex-col mb-2">
-          <label class="block text-sm font-medium text-tertiary mb-1">Listen Address</label>
-          <input 
-            v-model="proxyForm.listen" 
-            type="text" 
+          <InputFieldComp
+            v-model="proxyForm.listen"
+            label="Listen Address"
             placeholder=":80"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">Port to listen on, e.g. :80 or :443</p>
         </div>
@@ -557,11 +551,10 @@ example.com {
         </div>
         
         <div v-for="(target, index) in proxyForm.targets" :key="index" class="flex items-center gap-2 mb-2">
-          <input 
-            v-model="target.dial" 
-            type="text" 
+          <InputFieldComp
+            v-model="target.dial"
             placeholder="localhost:8080"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <button 
             type="button"
@@ -579,36 +572,32 @@ example.com {
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col mb-2">
-            <label class="block text-sm font-medium text-tertiary mb-1">Path Prefix (optional)</label>
-            <input 
-              v-model="proxyForm.pathPrefix" 
-              type="text" 
+            <InputFieldComp
+              v-model="proxyForm.pathPrefix"
+              label="Path Prefix (optional)"
               placeholder="/api/*"
-              class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
             <p class="mt-1 text-xs text-gray-500">Limit proxy to a specific path.</p>
           </div>
           
           <div class="flex flex-col mb-2">
-            <label class="block text-sm font-medium text-tertiary mb-1">Load Balancing Policy</label>
-            <select 
-              v-model="proxyForm.lbPolicy" 
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            >
-              <option value="">Default (random)</option>
-              <option value="round_robin">Round Robin</option>
-              <option value="least_conn">Least Connections</option>
-              <option value="ip_hash">IP Hash</option>
-            </select>
+            <SelectFieldComp
+              v-model="proxyForm.lbPolicy"
+              :options="[
+                { value: '', label: 'Default (random)' },
+                { value: 'round_robin', label: 'Round Robin' },
+                { value: 'least_conn', label: 'Least Connections' },
+                { value: 'ip_hash', label: 'IP Hash' }
+              ]"
+              label="Load Balancing Policy"
+              extraClass="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            />
           </div>
         </div>
         
         <div class="mt-4">
-          <label class="relative inline-flex items-center">
-            <input type="checkbox" v-model="proxyForm.enableTls" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark"></div>
-            <span class="ml-3 text-sm font-medium text-tertiary">Enable TLS (HTTPS)</span>
-          </label>
+          <CheckboxFieldComp v-model="proxyForm.enableTls">Enable TLS (HTTPS)</CheckboxFieldComp>
         </div>
       </div>
     </div>
@@ -638,41 +627,33 @@ example.com {
               <label class="block text-sm font-medium text-tertiary mb-1">{{ field.label }}</label>
               
               <!-- Text Input -->
-              <input v-if="field.type === 'text'" 
-                v-model="templateCustomization[field.id]" 
-                type="text" 
+              <InputFieldComp v-if="field.type === 'text'"
+                v-model="templateCustomization[field.id]"
                 :placeholder="field.placeholder"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 :required="field.required"
+                extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
               />
               
               <!-- Textarea -->
-              <textarea v-if="field.type === 'textarea'" 
-                v-model="templateCustomization[field.id]" 
+              <textarea v-if="field.type === 'textarea'"
+                v-model="templateCustomization[field.id]"
                 :placeholder="field.placeholder"
                 rows="3"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
+                class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
                 :required="field.required"
               ></textarea>
               
               <!-- Select Dropdown -->
-              <select v-if="field.type === 'select'" 
+              <SelectFieldComp v-if="field.type === 'select'"
                 v-model="templateCustomization[field.id]"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :options="field.options"
+                extraClass="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 :required="field.required"
-              >
-                <option v-for="option in field.options" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
+              />
               
               <!-- Toggle -->
               <div v-if="field.type === 'toggle'" class="flex items-center">
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" v-model="templateCustomization[field.id]" class="sr-only peer">
-                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark"></div>
-                  <span class="ml-3 text-sm font-medium text-tertiary">{{ field.label }}</span>
-                </label>
+                <CheckboxFieldComp v-model="templateCustomization[field.id]">{{ field.label }}</CheckboxFieldComp>
               </div>
               
               <!-- Description if available -->
@@ -694,6 +675,9 @@ import 'vue-json-pretty/lib/styles.css'
 import { RouterLink, useRouter } from 'vue-router'
 import { Vue3JsonEditor } from 'vue3-json-editor'
 import aceEditorSubComp from '@/components/util/aceEditorSubComp.vue'
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import SelectFieldComp from '@/components/util/selectFieldComp.vue'
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue'
 import apiService from '@/services/apiService'
 import templateService from '@/services/templateService'
 import ModalFormComp from '@/components/modals/modalFormComp.vue'

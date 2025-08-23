@@ -75,14 +75,28 @@ exports.createApiKey = async (req, res) => {
 // Get all API keys for a user
 exports.getApiKeys = async (req, res) => {
   try {
+    console.log(`getApiKeys request - userId: ${req.user?.id}`);
     const apiKeys = await apiKeyRepository.findByUserId(req.user.id);
-    
+
+    if (!Array.isArray(apiKeys)) {
+      console.warn('apiKeyRepository.findByUserId returned non-array:', apiKeys);
+      // Normalize to empty array to avoid runtime errors in the controller
+      const normalized = Array.isArray(apiKeys?.items) ? apiKeys.items : [];
+      return res.status(200).json({
+        success: true,
+        count: normalized.length,
+        apiKeys: normalized
+      });
+    }
+
     res.status(200).json({
       success: true,
       count: apiKeys.length,
       apiKeys
     });
   } catch (error) {
+    console.error('Error retrieving API keys:', error);
+    console.error(error.stack);
     res.status(500).json({
       success: false,
       message: 'Error retrieving API keys',
@@ -129,6 +143,17 @@ exports.updateApiKey = async (req, res) => {
     if (permissions) updateData.permissions = permissions;
     if (isActive !== undefined) updateData.isActive = isActive;
     
+    // Debug: log incoming update request
+    console.log(`updateApiKey request - id: ${req.params.id}, userId: ${req.user?.id}, updateData:`, updateData);
+
+    // If the client didn't send any updatable fields, return a 400 rather than letting repository/DB error
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid fields provided for update'
+      });
+    }
+    
     const apiKey = await apiKeyRepository.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       updateData,
@@ -163,6 +188,8 @@ exports.updateApiKey = async (req, res) => {
       message: 'API key updated successfully'
     });
   } catch (error) {
+    console.error('Error updating API key:', error);
+    console.error(error.stack);
     res.status(500).json({
       success: false,
       message: 'Error updating API key',

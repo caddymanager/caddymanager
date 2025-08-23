@@ -14,26 +14,26 @@
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="form-group">
             <label for="username" class="block text-sm font-medium text-tertiary mb-1">Username</label>
-            <input 
-              type="text" 
-              id="username" 
-              v-model="username" 
-              required 
+            <InputFieldComp
+              type="text"
+              id="username"
+              v-model="username"
+              required
               placeholder="Enter your username"
-              class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            >
+              :extraClass="'placeholder:text-gray-300'"
+            />
           </div>
           
           <div class="form-group">
             <label for="password" class="block text-sm font-medium text-tertiary mb-1">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              v-model="password" 
-              required 
+            <InputFieldComp
+              type="password"
+              id="password"
+              v-model="password"
+              required
               placeholder="Enter your password"
-              class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            >
+              :extraClass="'placeholder:text-gray-300'"
+            />
           </div>
           
           <div class="form-actions">
@@ -74,6 +74,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useCaddyServersStore } from '../stores/caddyServersStore';
 import { useCaddyConfigsStore } from '../stores/caddyConfigsStore';
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
 
 const router = useRouter();
 const authStore = useAuthStore();

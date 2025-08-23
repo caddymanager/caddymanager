@@ -19,12 +19,12 @@
           <label class="block text-sm font-medium text-gray-700">Apply to:</label>
           <div class="mt-2">
             <div class="flex items-center mb-2">
-              <input
+              <InputFieldComp
                 id="all-associated-servers"
                 v-model="targetType"
                 type="radio"
                 value="all"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                :extraClass="'h-4 w-4 text-primary focus:ring-primary border-gray-300'"
               />
               <label for="all-associated-servers" class="ml-2 block text-sm text-gray-700">
                 All associated servers ({{ associatedServers.length }})
@@ -32,12 +32,12 @@
             </div>
             
             <div class="flex items-center mb-2">
-              <input
+              <InputFieldComp
                 id="specific-servers"
                 v-model="targetType"
                 type="radio"
                 value="specific"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                :extraClass="'h-4 w-4 text-primary focus:ring-primary border-gray-300'"
               />
               <label for="specific-servers" class="ml-2 block text-sm text-gray-700">
                 Select specific servers
@@ -45,12 +45,12 @@
             </div>
             
             <div class="flex items-center">
-              <input
+              <InputFieldComp
                 id="servers-by-tag"
                 v-model="targetType"
                 type="radio"
                 value="tag"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                :extraClass="'h-4 w-4 text-primary focus:ring-primary border-gray-300'"
               />
               <label for="servers-by-tag" class="ml-2 block text-sm text-gray-700">
                 Servers with tag
@@ -64,12 +64,10 @@
           <label class="block text-sm font-medium text-gray-700">Select Servers:</label>
           <div class="mt-1 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-2">
             <div v-for="server in availableServers" :key="server._id" class="flex items-center py-1">
-              <input
+              <CheckboxFieldComp
                 :id="`server-${server._id}`"
-                v-model="selectedServerIds"
-                type="checkbox"
-                :value="server._id"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                v-model="selectedById[server._id]"
+                :extraClass="'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded'"
               />
               <label :for="`server-${server._id}`" class="ml-2 block text-sm text-gray-700">
                 {{ server.name }} <span v-if="server.status === 'online'" class="text-green-500">(Online)</span>
@@ -89,15 +87,12 @@
         <div v-if="targetType === 'tag'" class="mt-3">
           <label class="block text-sm font-medium text-gray-700">Select Tag:</label>
           <div class="mt-1">
-            <select
+            <SelectFieldComp
               v-model="selectedTag"
-              class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-            >
-              <option value="" disabled>Select a tag</option>
-              <option v-for="tag in availableTags" :key="tag" :value="tag">
-                {{ tag }} ({{ serversWithTag(tag).length }} servers)
-              </option>
-            </select>
+              :options="availableTags.map(tag => ({ value: tag, label: `${tag} (${serversWithTag(tag).length} servers)` }))"
+              placeholder="Select a tag"
+              :extraClass="'block w-full py-2 px-3'"
+            />
           </div>
           
           <!-- Show which servers have the selected tag -->
@@ -168,9 +163,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, reactive } from 'vue';
 import { useCaddyConfigsStore } from '@/stores/caddyConfigsStore';
 import { useCaddyServersStore } from '@/stores/caddyServersStore';
+import InputFieldComp from '@/components/util/inputFieldComp.vue';
+import SelectFieldComp from '@/components/util/selectFieldComp.vue';
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue';
 
 const props = defineProps({
   modelValue: {
@@ -449,4 +447,35 @@ onMounted(async () => {
     await serversStore.fetchServers();
   }
 });
+
+// Maintain a reactive map of serverId -> boolean to bind checkboxes reliably
+const selectedById = reactive({});
+
+// Initialize map for available servers and keep in sync
+watch(availableServers, (servers) => {
+  servers.forEach(s => {
+    if (!(s._id in selectedById)) selectedById[s._id] = false;
+  });
+});
+
+// When selectedServerIds changes, update selectedById
+watch(selectedServerIds, (ids) => {
+  // Reset all to false first
+  Object.keys(selectedById).forEach(k => selectedById[k] = false);
+  // Set selected ones true
+  ids.forEach(id => {
+    // ensure property exists
+    if (!(id in selectedById)) selectedById[id] = true;
+    else selectedById[id] = true;
+  });
+}, { deep: true });
+
+// When selectedById changes, update selectedServerIds array
+watch(selectedById, (map) => {
+  const ids = Object.keys(map).filter(k => map[k]);
+  // Only update if different to avoid infinite loops
+  if (JSON.stringify(ids) !== JSON.stringify(selectedServerIds.value)) {
+    selectedServerIds.value = ids;
+  }
+}, { deep: true });
 </script>
