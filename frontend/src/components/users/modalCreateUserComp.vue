@@ -15,15 +15,14 @@
     <form @submit.prevent="createUser">
       <div class="mb-4">
         <label for="username" class="block text-sm font-medium text-tertiary mb-1">Username</label>
-        <input 
-          type="text" 
-          id="username" 
-          v-model="form.username" 
-          required 
-          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.username }"
+        <InputFieldComp
+          type="text"
+          id="username"
+          v-model="form.username"
+          required
           placeholder="Enter username"
-        >
+          :extraClass="errors.username ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'placeholder:text-gray-300'"
+        />
         <div v-if="errors.username" class="mt-1 text-sm text-red-600">
           {{ errors.username }}
         </div>
@@ -32,14 +31,13 @@
       
       <div class="mb-4">
         <label for="email" class="block text-sm font-medium text-tertiary mb-1">Email (Optional)</label>
-        <input 
-          type="email" 
-          id="email" 
-          v-model="form.email" 
-          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.email }"
+        <InputFieldComp
+          type="email"
+          id="email"
+          v-model="form.email"
           placeholder="Enter email (optional)"
-        >
+          :extraClass="errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'placeholder:text-gray-300'"
+        />
         <div v-if="errors.email" class="mt-1 text-sm text-red-600">
           {{ errors.email }}
         </div>
@@ -47,15 +45,14 @@
       
       <div class="mb-4">
         <label for="password" class="block text-sm font-medium text-tertiary mb-1">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          v-model="form.password" 
-          required 
-          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.password }"
+        <InputFieldComp
+          type="password"
+          id="password"
+          v-model="form.password"
+          required
           placeholder="Enter password"
-        >
+          :extraClass="errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'placeholder:text-gray-300'"
+        />
         <div v-if="errors.password" class="mt-1 text-sm text-red-600">
           {{ errors.password }}
         </div>
@@ -64,15 +61,14 @@
       
       <div class="mb-4">
         <label for="confirmPassword" class="block text-sm font-medium text-tertiary mb-1">Confirm Password</label>
-        <input 
-          type="password" 
-          id="confirmPassword" 
-          v-model="form.confirmPassword" 
-          required 
-          class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': passwordsDoNotMatch }"
+        <InputFieldComp
+          type="password"
+          id="confirmPassword"
+          v-model="form.confirmPassword"
+          required
           placeholder="Confirm password"
-        >
+          :extraClass="passwordsDoNotMatch ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'placeholder:text-gray-300'"
+        />
         <div v-if="passwordsDoNotMatch" class="mt-1 text-sm text-red-600">
           Passwords do not match
         </div>
@@ -80,15 +76,12 @@
       
       <div class="mb-4">
         <label for="role" class="block text-sm font-medium text-tertiary mb-1">Role</label>
-        <select 
-          id="role" 
-          v-model="form.role" 
-          required 
-          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-        >
-          <option value="user">User</option>
-          <option value="admin">Administrator</option>
-        </select>
+        <SelectFieldComp
+          id="role"
+          v-model="form.role"
+          :options="[{ value: 'user', label: 'User' }, { value: 'admin', label: 'Administrator' }]"
+          required
+        />
       </div>
     </form>
   </modal-form-comp>
@@ -98,6 +91,8 @@
 import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
 import ModalFormComp from '../modals/modalFormComp.vue';
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import SelectFieldComp from '@/components/util/selectFieldComp.vue'
 
 const props = defineProps({
   modelValue: {

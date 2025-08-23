@@ -42,12 +42,12 @@
 
           <!-- Configuration Name -->
           <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-tertiary mb-1">Configuration Name</label>
-            <input 
-              id="name" 
-              v-model="formData.name" 
-              type="text" 
-              class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="name"
+              v-model="formData.name"
+              label="Configuration Name"
+              type="text"
+              extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
               required
             />
           </div>
@@ -65,39 +65,37 @@
           
           <!-- Version -->
           <div class="mb-4">
-            <label for="version" class="block text-sm font-medium text-tertiary mb-1">Version</label>
-            <input 
-              id="version" 
-              v-model="formData.metadata.version" 
-              type="text" 
-              class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="version"
+              v-model="formData.metadata.version"
+              label="Version"
+              type="text"
               placeholder="1.0.0"
+              extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
           </div>
 
           <!-- Tags -->
           <div class="mb-4">
-            <label for="tags" class="block text-sm font-medium text-tertiary mb-1">Tags (comma separated)</label>
-            <input 
-              id="tags" 
-              v-model="tagsInput" 
-              type="text" 
-              class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="tags"
+              v-model="tagsInput"
+              label="Tags (comma separated)"
+              type="text"
               placeholder="production, website, api"
+              extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
           </div>
 
           <!-- Status -->
           <div class="mb-4">
-            <label for="status" class="block text-sm font-medium text-tertiary mb-1">Status</label>
-            <select 
-              id="status" 
+            <SelectFieldComp
+              id="status"
               v-model="formData.status"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            >
-              <option value="draft">Draft</option>
-              <option value="live">Live</option>
-            </select>
+              label="Status"
+              :options="[{ value: 'draft', label: 'Draft' }, { value: 'live', label: 'Live' }]"
+              extraClass="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            />
           </div>
 
           <!-- No buttons here anymore, as saving is handled by the parent -->
@@ -208,6 +206,9 @@ import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { RouterLink, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification"
 import LoadingSpinnerComp from '@/components/util/loadingSpinnerComp.vue'
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import SelectFieldComp from '@/components/util/selectFieldComp.vue'
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue'
 
 const props = defineProps({
   configId: {

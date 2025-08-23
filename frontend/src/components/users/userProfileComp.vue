@@ -11,24 +11,24 @@
       <form @submit.prevent="updateProfile">
         <div class="form-group">
           <label for="username">Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            v-model="profileForm.username" 
-            required 
-            class="form-control"
-          >
+          <InputFieldComp
+            type="text"
+            id="username"
+            v-model="profileForm.username"
+            required
+            :extraClass="'form-control'"
+          />
         </div>
         
         <div class="form-group">
           <label for="email">Email (Optional)</label>
-          <input 
-            type="email" 
-            id="email" 
-            v-model="profileForm.email" 
-            class="form-control"
+          <InputFieldComp
+            type="email"
+            id="email"
+            v-model="profileForm.email"
             placeholder="Add an email address (optional)"
-          >
+            :extraClass="'form-control'"
+          />
         </div>
         
         <div class="form-info">
@@ -56,37 +56,36 @@
       <form @submit.prevent="changePassword">
         <div class="form-group">
           <label for="currentPassword">Current Password</label>
-          <input 
-            type="password" 
-            id="currentPassword" 
-            v-model="passwordForm.currentPassword" 
-            required 
-            class="form-control"
-          >
+          <InputFieldComp
+            type="password"
+            id="currentPassword"
+            v-model="passwordForm.currentPassword"
+            required
+            :extraClass="'form-control'"
+          />
         </div>
         
         <div class="form-group">
           <label for="newPassword">New Password</label>
-          <input 
-            type="password" 
-            id="newPassword" 
-            v-model="passwordForm.newPassword" 
-            required 
-            class="form-control"
-          >
+          <InputFieldComp
+            type="password"
+            id="newPassword"
+            v-model="passwordForm.newPassword"
+            required
+            :extraClass="'form-control'"
+          />
           <small class="form-text text-muted">Password must be at least 8 characters long</small>
         </div>
         
         <div class="form-group">
           <label for="confirmNewPassword">Confirm New Password</label>
-          <input 
-            type="password" 
-            id="confirmNewPassword" 
-            v-model="passwordForm.confirmNewPassword" 
-            required 
-            class="form-control"
-            :class="{ 'is-invalid': passwordsDoNotMatch }"
-          >
+          <InputFieldComp
+            type="password"
+            id="confirmNewPassword"
+            v-model="passwordForm.confirmNewPassword"
+            required
+            :extraClass="passwordsDoNotMatch ? 'form-control is-invalid' : 'form-control'"
+          />
           <div v-if="passwordsDoNotMatch" class="invalid-feedback">
             Passwords do not match
           </div>
@@ -106,6 +105,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
 
 const props = defineProps({
   user: {

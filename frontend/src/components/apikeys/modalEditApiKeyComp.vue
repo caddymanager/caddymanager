@@ -8,42 +8,28 @@
   >
     <form @submit.prevent="updateApiKey" v-if="editingKey" class="text-gray-700">
       <div class="mb-4">
-        <label for="editKeyName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-        <input 
-          id="editKeyName" 
-          v-model="editingKey.name" 
-          type="text" 
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-          required 
+        <InputFieldComp
+          id="editKeyName"
+          v-model="editingKey.name"
+          label="Name"
+          required
           minlength="3"
-        >
+        />
       </div>
       
       <div class="mt-4 mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
         <div class="space-y-2">
-          <label class="inline-flex items-center">
-            <input type="checkbox" v-model="editingKey.permissions.read" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"> 
-            <span class="ml-2 text-sm text-gray-700">Read (GET)</span>
-          </label>
-          <label class="inline-flex items-center ml-4">
-            <input type="checkbox" v-model="editingKey.permissions.write" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"> 
-            <span class="ml-2 text-sm text-gray-700">Write (POST/PUT)</span>
-          </label>
-          <label class="inline-flex items-center ml-4">
-            <input type="checkbox" v-model="editingKey.permissions.delete" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"> 
-            <span class="ml-2 text-sm text-gray-700">Delete</span>
-          </label>
+          <CheckboxFieldComp v-model="editingKey.permissions.read">Read (GET)</CheckboxFieldComp>
+          <CheckboxFieldComp class="ml-4" v-model="editingKey.permissions.write">Write (POST/PUT)</CheckboxFieldComp>
+          <CheckboxFieldComp class="ml-4" v-model="editingKey.permissions.delete">Delete</CheckboxFieldComp>
         </div>
       </div>
       
       <div class="mt-4 mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
         <div>
-          <label class="inline-flex items-center">
-            <input type="checkbox" v-model="editingKey.isActive" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"> 
-            <span class="ml-2 text-sm text-gray-700">Active</span>
-          </label>
+          <CheckboxFieldComp v-model="editingKey.isActive">Active</CheckboxFieldComp>
         </div>
       </div>
 
@@ -88,6 +74,8 @@
 import { ref, computed, watch } from 'vue';
 import { useApiKeyStore } from '../../stores/apiKeyStore';
 import ModalFormComp from '../modals/modalFormComp.vue';
+import InputFieldComp from '../util/inputFieldComp.vue';
+import CheckboxFieldComp from '../util/checkboxFieldComp.vue';
 
 // Props and emits
 const props = defineProps({

@@ -14,16 +14,16 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Server Name -->
         <div class="flex flex-col mb-2">
-          <label for="serverName" class="block text-sm font-medium text-tertiary  mb-1">Server Name*</label>
-          <input 
-            id="serverName"
-            v-model="formData.name"
-            type="text"
-            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            placeholder="Production Server"
-            maxlength="50"
-            @input="validateForm"
-          />
+                <label for="serverName" class="block text-sm font-medium text-tertiary  mb-1">Server Name*</label>
+                <InputFieldComp
+                  id="serverName"
+                  v-model="formData.name"
+                  type="text"
+                  placeholder="Production Server"
+                  maxlength="50"
+                  :extraClass="'placeholder:text-gray-300'"
+                  @input="validateForm"
+                />
           <p v-if="errors.name" class="mt-1 text-xs text-red-600">{{ errors.name }}</p>
         </div>
 
@@ -43,12 +43,12 @@
         <!-- Tags Field -->
         <div class="flex flex-col mb-2 md:col-span-2">
           <label for="serverTags" class="block text-sm font-medium text-tertiary mb-1">Tags</label>
-          <input
+          <InputFieldComp
             id="serverTags"
             v-model="tagsInput"
             type="text"
-            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="production, web, europe (comma-separated)"
+            :extraClass="'placeholder:text-gray-300'"
           />
           <p class="mt-1 text-xs text-tertiary/70">Enter comma-separated tags to categorize your server.</p>
           <div class="mt-2 flex flex-wrap gap-1">
@@ -75,12 +75,12 @@
         <!-- Server URL -->
         <div class="flex flex-col mb-2">
           <label for="serverUrl" class="block text-sm font-medium text-tertiary mb-1">Server Admin API URL*</label>
-          <input
+          <InputFieldComp
             id="serverUrl"
             v-model="formData.apiUrl"
             type="text"
-            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="http://localhost"
+            :extraClass="'placeholder:text-gray-300'"
             @input="validateForm"
           />
           <p class="mt-1 text-xs text-tertiary/70">The Caddy admin API URL (default: http://localhost)</p>
@@ -90,14 +90,14 @@
         <!-- API Port -->
         <div class="flex flex-col mb-2">
           <label for="apiPort" class="block text-sm font-medium text-tertiary mb-1">API Port*</label>
-          <input
+          <InputFieldComp
             id="apiPort"
-            v-model.number="formData.apiPort"
+            v-model="formData.apiPort"
             type="number"
-            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="2019"
             min="1"
             max="65535"
+            :extraClass="'placeholder:text-gray-300'"
             @input="validateForm"
           />
           <p class="mt-1 text-xs text-tertiary/70">The port for Caddy's admin API (default: 2019)</p>
@@ -107,12 +107,12 @@
         <!-- Admin API Path -->
         <div class="flex flex-col mb-2">
           <label for="adminApiPath" class="block text-sm font-medium text-tertiary mb-1">Admin API Path</label>
-          <input
+          <InputFieldComp
             id="adminApiPath"
             v-model="formData.adminApiPath"
             type="text"
-            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="/config/"
+            :extraClass="'placeholder:text-gray-300'"
           />
           <p class="mt-1 text-xs text-tertiary/70">The API path (default: /config/)</p>
         </div>
@@ -122,27 +122,15 @@
           <h4 class="text-sm font-medium text-tertiary  mb-3 pb-2 border-b border-gray-200">Additional Options</h4>
           
           <div class="flex items-center mb-4">
-            <label class="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                v-model="formData.active" 
-                class="sr-only peer"
-              />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark relative inline-flex items-center justify-center"></div>
-              <span class="ml-3 text-sm text-tertiary/70">Label server as active</span>
-            </label>
+            <CheckboxFieldComp id="active" v-model="formData.active" />
+            <span class="ml-3 text-sm text-tertiary/70">Label server as active</span>
           </div>
 
           <div class="flex items-center mb-4">
-            <label class="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                v-model="formData.pullExistingConfig" 
-                class="sr-only peer"
-              />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark relative inline-flex items-center justify-center"></div>
+            <div class="flex items-center">
+              <CheckboxFieldComp id="pullExistingConfig" v-model="formData.pullExistingConfig" />
               <span class="ml-3 text-sm text-tertiary/70">Pull existing configuration from server</span>
-            </label>
+            </div>
             <div class="ml-2">
               <button 
                 type="button"
@@ -172,6 +160,8 @@ import {
   EyeSlashIcon,
   QuestionMarkCircleIcon
 } from '@heroicons/vue/24/outline';
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue'
 
 // Props
 const props = defineProps({
