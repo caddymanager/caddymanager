@@ -22,22 +22,23 @@ services:
     container_name: caddymanager-backend
     restart: unless-stopped
     environment:
-      - PORT=3000
+      PORT: 3000
       # Database Engine Configuration (defaults to SQLite)
-      - DB_ENGINE=sqlite  # Options: 'sqlite' or 'mongodb'
+      DB_ENGINE: sqlite  # Options: 'sqlite' or 'mongodb'
       # SQLite Configuration (used when DB_ENGINE=sqlite)
-      - SQLITE_DB_PATH=/app/data/caddymanager.sqlite
+      SQLITE_DB_PATH: /app/data/caddymanager.sqlite
       # MongoDB Configuration (used when DB_ENGINE=mongodb)
-      - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
-      - CORS_ORIGIN=http://localhost:80
-      - LOG_LEVEL=debug
-      - CADDY_SANDBOX_URL=http://localhost:2019
-      - PING_INTERVAL=30000
-      - PING_TIMEOUT=2000
-      - AUDIT_LOG_MAX_SIZE_MB=100
-      - AUDIT_LOG_RETENTION_DAYS=90
-      - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
-      - JWT_EXPIRATION=24h
+      MONGODB_URI: "mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin"
+      CORS_ORIGIN: "http://localhost:80"
+      LOG_LEVEL: debug
+      CADDY_SANDBOX_URL: "http://localhost:2019"
+      PING_INTERVAL: "30000"
+      PING_TIMEOUT: "2000"
+      AUDIT_LOG_MAX_SIZE_MB: "100"
+      AUDIT_LOG_RETENTION_DAYS: "90"
+      METRICS_HISTORY_MAX: "1000"  # Optional: max number of in-memory metric history snapshots to keep
+      JWT_SECRET: "your_jwt_secret_key_here"  # Change for production!
+      JWT_EXPIRATION: "24h"
     # Backend is now only accessible through frontend proxy
     volumes:
       - sqlite_data:/app/data  # SQLite database storage

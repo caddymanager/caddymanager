@@ -31,6 +31,7 @@ const metricsHistory = []
  * @property {number} total
  * @property {number} online
  * @property {number} offline
+ * @property {Array<Object>} list - normalized server summaries (id,name,status,lastPinged,address)
  */
 
 /**
@@ -156,12 +157,21 @@ async function getAppMetrics() {
 
 async function getServerMetrics() {
   const servers = await caddyServersRepository.findAll({ limit: 10000 })
-  const list = Array.isArray(servers) ? servers : []
-  const total = list.length
-  const online = list.filter(s => s.status === 'online').length
-  const offline = list.filter(s => s.status === 'offline').length
+  const rawList = Array.isArray(servers) ? servers : []
+  const total = rawList.length
+  const online = rawList.filter(s => s.status === 'online').length
+  const offline = rawList.filter(s => s.status === 'offline').length
 
-  return { total, online, offline }
+  // Normalize a compact server summary to include safe fields for metrics labeling
+  const list = rawList.map(s => ({
+    id: s._id || s.id || null,
+    name: s.name || s.hostname || s.host || null,
+    status: s.status || null,
+    lastPinged: s.lastPinged || s.last_pinged || s.last_ping || s.updatedAt || s.updated_at || null,
+    address: s.address || s.host || null
+  }))
+
+  return { total, online, offline, list }
 }
 
 /**

@@ -90,4 +90,18 @@ router.get('/history', metricsController.getHistory)
  */
 router.delete('/history', metricsController.clearHistory)
 
+/**
+ * @openapi
+ * /metrics/prometheus:
+ *   get:
+ *     tags: [Metrics]
+ *     summary: Prometheus exposition endpoint for basic metrics
+ *     responses:
+ *       200:
+ *         description: Prometheus text format
+ */
+// Prometheus exposition endpoint (public): returns Prometheus text format.
+// If you want this protected, re-add the auth middleware here.
+router.get('/prometheus', metricsController.getPrometheus)
+
 module.exports = router

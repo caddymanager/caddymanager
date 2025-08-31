@@ -80,6 +80,7 @@ services:
       - PING_TIMEOUT=2000
       - AUDIT_LOG_MAX_SIZE_MB=100
       - AUDIT_LOG_RETENTION_DAYS=90
+  - METRICS_HISTORY_MAX=1000  # Optional: max number of in-memory metric history snapshots to keep
       - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
       - JWT_EXPIRATION=24h
     # Backend is now only accessible through frontend proxy
@@ -167,6 +168,7 @@ JWT_EXPIRATION=24h
 - `CADDY_SANDBOX_URL`: URL for the Caddy sandbox server (for testing) and/or validating configs.
 - `PING_INTERVAL` / `PING_TIMEOUT`: Health check intervals (ms).
 - `AUDIT_LOG_MAX_SIZE_MB` / `AUDIT_LOG_RETENTION_DAYS`: Audit log settings.
+- `METRICS_HISTORY_MAX`: Optional max number of in-memory metric history snapshots to keep (default: 1000).
 - `JWT_SECRET` / `JWT_EXPIRATION`: JWT credential settings
 
 > **Note:** The default CaddyManager user when first creating the app is `admin` with password `caddyrocks`. You can change this after logging in.
@@ -198,6 +200,33 @@ To switch between databases, simply change the `DB_ENGINE` environment variable 
 - [Caddy Documentation](https://caddyserver.com/docs/)
 - [CaddyManager Docs](https://caddymanager.online/#/docs)
 - [Swagger API Docs](http://localhost:3000/api-docs) (after starting backend)
+
+## 📈 Metrics & Prometheus
+
+This project exposes runtime and application metrics that can be scraped by Prometheus or fetched as JSON for dashboards.
+
+- Prometheus exposition endpoint (text format): `/api/v1/metrics/prometheus`
+- JSON metrics (aggregated): `/api/v1/metrics`
+
+Minimal Prometheus scrape fragment (add under `scrape_configs:` in your `prometheus.yml`):
+
+```yaml
+- job_name: 'caddymanager'
+  metrics_path: /api/v1/metrics/prometheus
+  static_configs:
+    - targets: ['localhost:3000']
+```
+
+Quick test (returns Prometheus text format):
+
+```
+curl http://localhost:3000/api/v1/metrics/prometheus
+```
+
+Notes:
+- The in-memory metric history size is controlled by the `METRICS_HISTORY_MAX` env var (default shown in the Docker Compose example).
+- If you run Prometheus behind a proxy or need auth headers, adjust the scrape job accordingly.
+
 
 ---
 
