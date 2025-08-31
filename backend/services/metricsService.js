@@ -9,6 +9,62 @@ const caddyService = require('./caddyService')
 const METRICS_HISTORY_MAX = parseInt(process.env.METRICS_HISTORY_MAX, 10) || 120
 const metricsHistory = []
 
+/**
+ * @typedef {Object} AppMetrics
+ * @property {number} pid
+ * @property {number} uptimeSeconds
+ * @property {string} uptimeHuman
+ * @property {Object} memory
+ * @property {Object} systemMemory
+ * @property {number|null} cpus
+ * @property {number[]|null} loadAverage
+ * @property {string|null} platform
+ * @property {string} nodeVersion
+ * @property {Object} versions
+ * @property {string|null} env
+ * @property {string} hostname
+ * @property {Object|null} buildInfo
+ */
+
+/**
+ * @typedef {Object} ServerMetrics
+ * @property {number} total
+ * @property {number} online
+ * @property {number} offline
+ */
+
+/**
+ * @typedef {Object} ConfigSummary
+ * @property {string|null} id
+ * @property {string|null} name
+ * @property {string[]} servers
+ * @property {string|null} status
+ * @property {string[]} hosts
+ * @property {string[]} upstreams
+ * @property {Object} hostToUpstreams
+ */
+
+/**
+ * @typedef {Object} ConfigMetrics
+ * @property {number} totalConfigs
+ * @property {number} totalDomains
+ * @property {ConfigSummary[]} configs
+ */
+
+/**
+ * @typedef {Object} AuditMetrics
+ * @property {number|null} total
+ */
+
+/**
+ * @typedef {Object} MetricsSnapshot
+ * @property {string} timestamp
+ * @property {AppMetrics} app
+ * @property {ServerMetrics} servers
+ * @property {ConfigMetrics} configs
+ * @property {AuditMetrics} audit
+ */
+
 function pushMetricsSnapshot(snapshot) {
   try {
     metricsHistory.push(snapshot)
@@ -93,6 +149,11 @@ async function getAppMetrics() {
   }
 }
 
+/**
+ * Get app/process metrics
+ * @returns {Promise<AppMetrics>} app metrics envelope
+ */
+
 async function getServerMetrics() {
   const servers = await caddyServersRepository.findAll({ limit: 10000 })
   const list = Array.isArray(servers) ? servers : []
@@ -102,6 +163,11 @@ async function getServerMetrics() {
 
   return { total, online, offline }
 }
+
+/**
+ * Get server inventory metrics
+ * @returns {Promise<ServerMetrics>} server metrics
+ */
 
 async function getConfigMetrics() {
   const configs = await caddyConfigRepository.findAll({ limit: 10000 })
@@ -240,6 +306,11 @@ async function getConfigMetrics() {
   return { totalConfigs, totalDomains: domainsSet.size, configs: perConfig }
 }
 
+/**
+ * Get configuration metrics and a compact per-config summary
+ * @returns {Promise<ConfigMetrics>} configuration metrics and summaries
+ */
+
 async function getAuditMetrics() {
   // Attempt to get a count; repositories may not have a specialized count method
   try {
@@ -251,6 +322,11 @@ async function getAuditMetrics() {
   }
 }
 
+/**
+ * Get audit/logging metrics (counts)
+ * @returns {Promise<AuditMetrics>} audit metrics
+ */
+
 async function getAllMetrics() {
   const [app, servers, configs, audit] = await Promise.all([
     getAppMetrics(),
@@ -259,6 +335,7 @@ async function getAllMetrics() {
     getAuditMetrics()
   ])
 
+  /** @type {MetricsSnapshot} */
   const payload = {
     timestamp: new Date().toISOString(),
     app,
