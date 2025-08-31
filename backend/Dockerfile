@@ -27,6 +27,18 @@ COPY package*.json ./
 # with this base image; no need to force build-from-source.
 RUN npm ci && chown -R node:node /usr/src/node-app
 
+# Install build dependencies so native modules can be compiled inside the image
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential python3 libsqlite3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Force native modules to build from source inside this image so binaries are
+# compiled against the image's glibc version and avoid prebuilt binary mismatches.
+ENV npm_config_build_from_source=true
+
+# Install packages (builds native addons) and ensure node owns the app directory
+RUN npm ci --build-from-source --unsafe-perm && chown -R node:node /usr/src/node-app
+
 # Copy project files and switch to unprivileged user for runtime
 COPY --chown=node:node . .
 USER node
