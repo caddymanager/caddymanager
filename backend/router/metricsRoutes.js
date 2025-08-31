@@ -11,7 +11,7 @@ const metricsController = require('../controllers/metricsController')
 
 /**
  * @openapi
- * /metrics:
+ * /api/v1/metrics:
  *   get:
  *     tags: [Metrics]
  *     summary: Get aggregated metrics (app, servers, configs, audit)
@@ -32,7 +32,7 @@ router.get('/', metricsController.getMetrics)
 
 /**
  * @openapi
- * /metrics/app:
+ * /api/v1/metrics/app:
  *   get:
  *     tags: [Metrics]
  *     summary: Get application-level metrics (uptime, memory, load, build)
@@ -44,7 +44,7 @@ router.get('/app', metricsController.getApp)
 
 /**
  * @openapi
- * /metrics/servers:
+ * /api/v1/metrics/servers:
  *   get:
  *     tags: [Metrics]
  *     summary: Get server inventory metrics (total/online/offline)
@@ -56,7 +56,7 @@ router.get('/servers', metricsController.getServers)
 
 /**
  * @openapi
- * /metrics/configs:
+ * /api/v1/metrics/configs:
  *   get:
  *     tags: [Metrics]
  *     summary: Get configuration metrics (total configs, domains, samples)
@@ -68,7 +68,7 @@ router.get('/configs', metricsController.getConfigs)
 
 /**
  * @openapi
- * /metrics/history:
+ * /api/v1/metrics/history:
  *   get:
  *     tags: [Metrics]
  *     summary: Get recent metrics history used for sparklines and timelines
@@ -80,7 +80,7 @@ router.get('/history', metricsController.getHistory)
 
 /**
  * @openapi
- * /metrics/history:
+ * /api/v1/metrics/history:
  *   delete:
  *     tags: [Metrics]
  *     summary: Clear the in-memory metrics history (debug/maintenance)
@@ -92,7 +92,7 @@ router.delete('/history', metricsController.clearHistory)
 
 /**
  * @openapi
- * /metrics/prometheus:
+ * /api/v1/metrics/prometheus:
  *   get:
  *     tags: [Metrics]
  *     summary: Prometheus exposition endpoint for basic metrics
