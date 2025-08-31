@@ -1,6 +1,6 @@
 {
   "name": "caddy-manager-backend",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Backend for managing Caddy2 API servers",
   "main": "app.js",
   "scripts": {
