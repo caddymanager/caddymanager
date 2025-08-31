@@ -1,11 +1,8 @@
-FROM node:alpine
+# Use a glibc-based Node image to avoid musl/glibc native-addon incompatibilities
+FROM node:20-bullseye-slim
 
 RUN mkdir -p /usr/src/node-app && chown -R node:node /usr/src/node-app
 RUN mkdir -p /app/data && chown -R node:node /app/data
-
-# Install build dependencies required to compile native addons on Alpine
-# (better-sqlite3 needs a native build when running on musl)
-RUN apk add --no-cache build-base python3 sqlite-dev linux-headers
 
 # Install PM2 globally before switching to node user
 RUN npm install pm2 -g
@@ -26,15 +23,13 @@ ENV BUILD_DATE=$BUILD_DATE
 
 COPY package*.json ./
 
-# Force building native modules from source inside this Alpine image
-# so prebuilt binaries for glibc-based images are not used.
-ENV npm_config_build_from_source=true
+# Install dependencies as root. Prebuilt native binaries for glibc should now be compatible
+# with this base image; no need to force build-from-source.
+RUN npm ci && chown -R node:node /usr/src/node-app
 
-USER node
-
-RUN npm ci
-
+# Copy project files and switch to unprivileged user for runtime
 COPY --chown=node:node . .
+USER node
 
 # Generate build info with passed environment variables and ensure it completes
 RUN node scripts/generateBuildInfo.js && \
