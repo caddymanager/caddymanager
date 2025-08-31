@@ -5,24 +5,51 @@ import DashboardPanelNumberComp from '@/components/dashboard/dashboardPanelNumbe
 import DashboardPanelTextComp from '@/components/dashboard/dashboardPanelTextComp.vue'
 import DashboardPanelTimelineComp from '@/components/dashboard/dashboardPanelTimelineComp.vue'
 import ModalAuditLogDetailsComp from '@/components/auditlog/modalAuditLogDetailsComp.vue'
-import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuditLogStore } from '@/stores/auditLogStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useCaddyServersStore } from '@/stores/caddyServersStore'
+import { useApiKeyStore } from '@/stores/apiKeyStore'
 import apiService from '@/services/apiService'
 
-// prefer metrics for system summary when available
+/**
+ * Dashboard view
+ *
+ * This file provides the data and handlers for the main Dashboard page.
+ * Key responsibilities:
+ * - fetch initial sets of servers, audit logs and api keys
+ * - load aggregated metrics and metrics history for sparklines
+ * - expose computed panels consumed by several DashboardPanel* components
+ * - handle timeline selection and show audit log detail modal
+ */
+
+// prefer metrics and stores for system summary when available
+/**
+ * Computed list of small key/value items shown in the "System Stats" panel.
+ * Prefer aggregated `metrics` when available, otherwise fall back to store values.
+ *
+ * @returns {Array<{label: string, value: string|number, meta?: string}>}
+ */
 const textItems = computed(() => {
   const cfgCount = metrics && metrics.value && metrics.value.configs ? metrics.value.configs.totalConfigs : null
   const domainCount = metrics && metrics.value && metrics.value.configs ? metrics.value.configs.totalDomains : null
+  const apiKeysCount = (apiKeyStore.apiKeys && Array.isArray(apiKeyStore.apiKeys)) ? apiKeyStore.apiKeys.length : null
+  const serversCount = metrics && metrics.value && metrics.value.servers ? metrics.value.servers.total : (serversStore.servers ? serversStore.servers.length : null)
+
   return [
-    { label: 'API Keys', value: 12, meta: '2 expired' },
-    { label: 'Configs', value: cfgCount !== null ? cfgCount : 24, meta: domainCount !== null ? `${domainCount} domains` : 'updated 5m ago' },
-    { label: 'Caddy Servers', value: metrics && metrics.value && metrics.value.servers ? metrics.value.servers.total : 3, meta: 'all healthy' }
+    { label: 'API Keys', value: apiKeysCount !== null ? apiKeysCount : '—', meta: apiKeyStore.loading ? 'loading…' : '' },
+    { label: 'Configs', value: cfgCount !== null ? cfgCount : (domainCount !== null ? domainCount : '—'), meta: domainCount !== null ? `${domainCount} domains` : 'updated recently' },
+    { label: 'Caddy Servers', value: serversCount !== null ? serversCount : '—', meta: serversStore.isLoading ? 'loading…' : '' }
   ]
 })
 
 // Live-derived panels (replace previous demo panels)
+/**
+ * Panel summarizing total servers, last delta and sparkline series.
+ * Uses aggregated `metrics` when present, otherwise uses the servers store.
+ *
+ * @returns {{title: string, value: number, delta: number|null, sparklineData: number[]}}
+ */
 const totalServersPanel = computed(() => {
   const m = metrics && metrics.value && metrics.value.servers ? metrics.value.servers : null
   const servers = serversStore.servers || []
@@ -35,6 +62,12 @@ const totalServersPanel = computed(() => {
   return { title: 'Total Servers', value: total, delta, sparklineData: prevSeries }
 })
 
+/**
+ * Panel summarizing configs (total & delta) with sparkline data from metrics history.
+ * Falls back to 'N/A' when no data is available yet.
+ *
+ * @returns {{title: string, value: number|string, delta: number|null, sparklineData: number[]}}
+ */
 const configsPanel = computed(() => {
   const m = metrics && metrics.value && metrics.value.configs ? metrics.value.configs : null
   const cfgCount = m ? m.totalConfigs : null
@@ -49,16 +82,27 @@ const configsPanel = computed(() => {
 const auditLogStore = useAuditLogStore()
 // Use auth store to gate admin-only panels (matches Audit Log view behavior)
 const authStore = useAuthStore()
+// API keys store for accurate API key counts
+const apiKeyStore = useApiKeyStore()
 // Servers store for live server summary
 const serversStore = useCaddyServersStore()
 
 // Fetch recent audit logs for the dashboard and initial metrics
+/**
+ * Initial load for the dashboard: fetch a small set of audit logs, servers and api keys,
+ * then attempt to read aggregated metrics and metrics history. Errors are non-fatal
+ * and the UI will gracefully fall back to store values.
+ *
+ * @returns {Promise<void>}
+ */
 onMounted(async () => {
   try {
     // try to fetch a small recent set; fetchAuditLogs will populate the store.auditLogs
     await Promise.all([
       auditLogStore.fetchAuditLogs({ limit: 10 }),
-      serversStore.fetchServers()
+      serversStore.fetchServers(),
+      // fetch a small set of API keys for the dashboard summary (non-blocking)
+      apiKeyStore.fetchApiKeys().catch(() => [])
     ])
 
     // attempt to fetch aggregated metrics (non-blocking)
@@ -200,7 +244,7 @@ const appItems = computed(() => {
 const configSamples = computed(() => {
   const cs = metrics && metrics.value && metrics.value.configs && Array.isArray(metrics.value.configs.configs) ? metrics.value.configs.configs : null
   if (!cs || !cs.length) {
-  return [ { label: 'Configs', value: textDemoItems[1].value || '—', meta: 'No details' } ]
+    return [ { label: 'Configs', value: '—', meta: 'No details' } ]
   }
 
   return cs.slice(0, 3).map(c => ({
@@ -217,6 +261,12 @@ let updateInterval = null
 const now = ref(Date.now())
 let nowInterval = null
 
+/**
+ * Background update that refreshes servers, server statuses, audit logs and metrics.
+ * This is called on an interval and also once immediately after mount.
+ *
+ * @returns {Promise<void>}
+ */
 async function doUpdate() {
   try {
     isUpdating.value = true
@@ -269,6 +319,12 @@ onUnmounted(() => {
   if (nowInterval) clearInterval(nowInterval)
 })
 
+/**
+ * Return a human-friendly "time ago" string for a timestamp.
+ *
+ * @param {number|string|Date|null|undefined} ts - timestamp to format (ms since epoch or date string)
+ * @returns {string} friendly relative time (e.g. 'just now', '5m ago')
+ */
 function timeAgo(ts) {
   if (!ts) return 'Never'
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -292,6 +348,13 @@ const lastUpdatedText = computed(() => {
 })
 
 // Map audit logs to the timeline component's expected shape
+/**
+ * Computed timeline events consumed by `DashboardPanelTimelineComp`.
+ * Maps the audit log store objects into a minimal shape: {id,timestamp,title,description,type}.
+ * Returns an empty array when there are no logs (component should render an empty state).
+ *
+ * @returns {Array<{id: string|null, timestamp: number|string|null, title: string, description: string, type: string}>}
+ */
 const timelineEvents = computed(() => {
   const logs = auditLogStore.auditLogs || []
   const mapped = logs.slice(0, 10).map((log) => {
@@ -303,13 +366,7 @@ const timelineEvents = computed(() => {
     return { id, timestamp, title, description, type }
   })
 
-  // fallback demo when store is empty
-  if (!mapped.length) {
-    return [
-      { id: 'demo-1', timestamp: Date.now() - 1000 * 60 * 5, title: 'No recent audit logs', description: 'No recent activities found. Ensure the backend is running and audit logs are available.', type: 'info' }
-    ]
-  }
-
+  // when there are no logs, return empty array (UI will show empty-state)
   return mapped
 })
 
@@ -317,6 +374,14 @@ const timelineEvents = computed(() => {
 const showAuditModal = ref(false)
 const modalAuditLog = ref(null)
 
+/**
+ * Handle selection of a timeline event.
+ * If the event contains an id, try to reuse the full object from the store or fetch it.
+ * Otherwise normalize the provided event and open the modal.
+ *
+ * @param {Object} ev - event object from the timeline component. May include {id, _id} or be a lightweight object.
+ * @returns {Promise<void>}
+ */
 async function handleSelect(ev) {
   // ev may be an event object with an id, or a demo object
   const id = ev && (ev.id || ev._id || (ev.id === 0 ? ev.id : (ev._id === 0 ? ev._id : null)))
@@ -354,6 +419,13 @@ async function handleSelect(ev) {
 }
 
 // Ensure modal receives a predictable auditLog shape
+/**
+ * Normalize different audit log shapes into a predictable object consumed by the details modal.
+ * This accepts raw objects, envelopes like {auditLog: {...}}, and previously-normalized items.
+ *
+ * @param {any} src - source object to normalize
+ * @returns {{action:string,statusCode:null|number,timestamp:any,user:any,resourceType:any,resourceId:any,details:any,ipAddress:any,userAgent:any,title:string,description:string,raw:any}}
+ */
 function normalizeAuditLog(src) {
   if (!src) return {}
 
@@ -379,6 +451,13 @@ function normalizeAuditLog(src) {
   }
 }
 
+/**
+ * Load audit logs for a specific user and close the modal.
+ *
+ * @param {string|number} userId - user identifier
+ * @param {string} [username] - optional username (unused, for convenience)
+ * @returns {Promise<void>}
+ */
 async function handleViewUserLogs(userId, username) {
   try {
     await auditLogStore.fetchUserAuditLogs(userId)
@@ -389,6 +468,13 @@ async function handleViewUserLogs(userId, username) {
   }
 }
 
+/**
+ * Load audit logs for a specific resource and close the modal.
+ *
+ * @param {string} resourceType - type of resource (e.g. 'config', 'server')
+ * @param {string|number} resourceId - resource identifier
+ * @returns {Promise<void>}
+ */
 async function handleViewResourceLogs(resourceType, resourceId) {
   try {
     await auditLogStore.fetchResourceAuditLogs(resourceType, resourceId)
