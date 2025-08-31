@@ -80,7 +80,7 @@ services:
       - PING_TIMEOUT=2000
       - AUDIT_LOG_MAX_SIZE_MB=100
       - AUDIT_LOG_RETENTION_DAYS=90
-  - METRICS_HISTORY_MAX=1000  # Optional: max number of in-memory metric history snapshots to keep
+      - METRICS_HISTORY_MAX=1000  # Optional: max number of in-memory metric history snapshots to keep
       - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
       - JWT_EXPIRATION=24h
     # Backend is now only accessible through frontend proxy
