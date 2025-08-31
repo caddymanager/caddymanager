@@ -69,7 +69,7 @@ const spinnerSize = computed(() => (props.size === 'large' ? 'large' : props.siz
 
 const formattedValue = computed(() => (props.value === null || props.value === undefined ? 'N/A' : props.value))
 
-const hasDelta = computed(() => props.delta !== null && props.delta !== undefined)
+const hasDelta = computed(() => Number.isFinite(props.delta) && props.delta !== 0)
 
 const valueClass = computed(() => {
 	switch (props.size) {

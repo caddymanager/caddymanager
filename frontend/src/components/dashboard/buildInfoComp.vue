@@ -14,8 +14,6 @@
         <div class="mb-2"><span class="font-medium text-tertiary">Node Version:</span> {{ frontendBuildInfo.nodeVersion }}</div>
         <div class="mb-2"><span class="font-medium text-tertiary">Git Commit:</span> <span class="font-mono">{{ frontendBuildInfo.git?.shortCommit }}</span></div>
         <div class="mb-2"><span class="font-medium text-tertiary">Branch:</span> {{ frontendBuildInfo.git?.branch }}</div>
-        <div class="mb-2"><span class="font-medium text-tertiary">Last Commit Date:</span> {{ formatDate(frontendBuildInfo.git?.lastCommitDate) }}</div>
-        <div class="mb-2"><span class="font-medium text-tertiary">Last Commit Message:</span> <span class="text-xs text-gray-500">{{ frontendBuildInfo.git?.lastCommitMessage }}</span></div>
       </div>
   </div>
 
@@ -39,8 +37,6 @@
         <div class="mb-2"><span class="font-medium text-tertiary">Uptime:</span> {{ backendBuildInfo.runtime?.uptimeFormatted }}</div>
         <div class="mb-2"><span class="font-medium text-tertiary">Git Commit:</span> <span class="font-mono">{{ backendBuildInfo.git?.shortCommit }}</span></div>
         <div class="mb-2"><span class="font-medium text-tertiary">Branch:</span> {{ backendBuildInfo.git?.branch }}</div>
-        <div class="mb-2"><span class="font-medium text-tertiary">Last Commit Date:</span> {{ formatDate(backendBuildInfo.git?.lastCommitDate) }}</div>
-        <div class="mb-2"><span class="font-medium text-tertiary">Last Commit Message:</span> <span class="text-xs text-gray-500">{{ backendBuildInfo.git?.lastCommitMessage }}</span></div>
         <div class="mb-2"><span class="font-medium text-tertiary">Memory Usage:</span> <span class="font-mono">{{ backendBuildInfo.runtime?.memory?.rss }} bytes RSS</span></div>
         <div class="mb-2"><span class="font-medium text-tertiary">Current Time:</span> {{ formatDate(backendBuildInfo.runtime?.currentTime) }}</div>
       </div>

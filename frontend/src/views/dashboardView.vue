@@ -98,9 +98,10 @@ const serversStore = useCaddyServersStore()
 onMounted(async () => {
   try {
     // try to fetch a small recent set; fetchAuditLogs will populate the store.auditLogs
-    await Promise.all([
-      auditLogStore.fetchAuditLogs({ limit: 10 }),
-      serversStore.fetchServers(),
+    // Run independent fetches in parallel but don't let one failure stop the others.
+    await Promise.allSettled([
+      auditLogStore.fetchAuditLogs({ limit: 10 }).catch(err => { console.debug('dashboard: audit logs fetch failed:', err && err.message); }),
+      serversStore.fetchServers().catch(err => { console.debug('dashboard: servers fetch failed:', err && err.message); }),
       // fetch a small set of API keys for the dashboard summary (non-blocking)
       apiKeyStore.fetchApiKeys().catch(() => [])
     ])
@@ -268,22 +269,23 @@ let nowInterval = null
  * @returns {Promise<void>}
  */
 async function doUpdate() {
-  try {
-    isUpdating.value = true
-    // Refresh all dashboard data: servers list, server statuses and recent audit logs
-    const results = await Promise.all([
-      serversStore.fetchServers(),
-      serversStore.checkAllServersStatus(),
-      auditLogStore.fetchAuditLogs({ limit: 10 }),
-      // fetch metrics but don't let it throw the entire update
-      apiService.get('/metrics').catch(() => null)
-    ])
+    try {
+      isUpdating.value = true
+      // Refresh all dashboard data in parallel but don't let one failure abort the others.
+      const settled = await Promise.allSettled([
+        serversStore.fetchServers().catch(err => { console.debug('dashboard update: servers fetch failed', err && err.message); return null }),
+        serversStore.checkAllServersStatus().catch(err => { console.debug('dashboard update: checkAllServersStatus failed', err && err.message); return null }),
+        auditLogStore.fetchAuditLogs({ limit: 10 }).catch(err => { console.debug('dashboard update: audit logs fetch failed', err && err.message); return null }),
+        // fetch metrics but don't let it throw the entire update
+        apiService.get('/metrics').catch(() => null)
+      ])
 
-    // metrics response may be last item
-    const maybeMetricsRes = results[3]
-    if (maybeMetricsRes && maybeMetricsRes.data) {
-      metrics.value = maybeMetricsRes.data.data || null
-    }
+      // metrics response may be the last settled item
+      const metricsSettled = settled[3]
+      const maybeMetricsRes = metricsSettled && metricsSettled.status === 'fulfilled' ? metricsSettled.value : null
+      if (maybeMetricsRes && maybeMetricsRes.data) {
+        metrics.value = maybeMetricsRes.data.data || null
+      }
 
       // refresh history
       try {
@@ -529,7 +531,6 @@ async function handleViewResourceLogs(resourceType, resourceId) {
               <span v-if="isUpdating" aria-hidden class="inline-flex items-center">
                 <svg class="animate-spin h-3 w-3 text-gray-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
               </span>
-              <span class="text-gray-500">Updated: {{ lastUpdatedText }}</span>
             </div>
           </template>
         </DashboardPanelTextComp>
