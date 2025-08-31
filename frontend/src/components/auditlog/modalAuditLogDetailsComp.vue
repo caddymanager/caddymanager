@@ -8,9 +8,12 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  // Make auditLog optional and provide a safe default so the modal can render
+  // defensively when invoked from different call sites (dashboard, table, etc.)
   auditLog: {
     type: Object,
-    required: true
+    required: false,
+    default: () => ({})
   }
 });
 
@@ -152,6 +155,18 @@ const formatValue = (val) => {
   }
   return String(val);
 };
+
+// Debugging: watch incoming auditLog payloads so callers (dashboard) can be
+// quickly verified during development. This is non-destructive and only logs
+// when the component receives new data.
+import { watch } from 'vue';
+watch(() => props.auditLog, (newVal) => {
+  try {
+    console.debug('ModalAuditLogDetailsComp received auditLog:', newVal && Object.keys(newVal).length ? newVal : '(empty)');
+  } catch (e) {
+    console.debug('ModalAuditLogDetailsComp received auditLog (unserializable)');
+  }
+}, { immediate: true });
 </script>
 
 <template>
