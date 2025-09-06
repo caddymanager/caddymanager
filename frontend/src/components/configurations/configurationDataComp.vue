@@ -1100,39 +1100,44 @@ function addSelectedTemplate() {
   isAddingTemplate.value = true
 
   try {
-    // Start with the current configuration
-    const currentConfig = JSON.parse(JSON.stringify(jsonEditorContent.value))
-    
-    // Get the template configuration
-    const template = templateService.getTemplateById(selectedTemplate.value)
+    // Get the template to validate it exists
+    const template = templateService.getTemplateById(selectedTemplate.value);
     if (!template) {
-      throw new Error('Template not found')
+      throw new Error('Template not found');
+    }
+
+    // Use the intelligent merging from templateService
+    const mergedConfig = templateService.generateConfigFromTemplate(
+      selectedTemplate.value, 
+      templateCustomization.value || {},
+      jsonEditorContent.value
+    );
+    
+    // Validate the result
+    if (!mergedConfig || typeof mergedConfig !== 'object') {
+      throw new Error('Failed to generate valid configuration from template');
     }
     
-    const templateConfig = JSON.parse(JSON.stringify(template.config))
-    
-    // Deep merge the template into the current config
-    const mergedConfig = deepMergeConfigs(currentConfig, templateConfig)
-    
     // Update the editor content with the merged configuration
-    jsonEditorContent.value = mergedConfig
+    jsonEditorContent.value = mergedConfig;
     
     // Emit the updated content to the parent component
-    emit('json-content-updated', mergedConfig)
-    emit('json-validation', true)
+    emit('json-content-updated', mergedConfig);
+    emit('json-validation', true);
     
     // Show success message
-    formError.value = null
-    const { notify } = useNotification()
+    formError.value = null;
+    const { notify } = useNotification();
+    
     notify({
       title: "Template Added",
       text: `Successfully added ${template.name} template to your configuration`,
       type: "success",
       duration: 3000
-    })
+    });
     
     // Switch to editor mode to show the changes
-    editMode.value = 'editor'
+    editMode.value = 'editor';
   } catch (err) {
     console.error('Error adding template:', err)
     formError.value = `Failed to add template: ${err.message}`
@@ -1493,24 +1498,33 @@ function applyAndUseCustomizedTemplate() {
 
     // Get the template for display purposes
     const template = templateService.getTemplateById(selectedTemplate.value);
+    if (!template) {
+      throw new Error('Template not found');
+    }
 
-    // Use the templateService to generate the customized template
-    const customizedTemplate = templateService.generateConfigFromTemplate(
+    // Validate customization data
+    if (!templateCustomization.value || typeof templateCustomization.value !== 'object') {
+      console.warn('Invalid customization data, using defaults');
+      templateCustomization.value = {};
+    }
+
+    // Use the templateService with intelligent merging
+    const mergedConfig = templateService.generateConfigFromTemplate(
       selectedTemplate.value, 
-      templateCustomization.value
+      templateCustomization.value,
+      jsonEditorContent.value
     );
     
+    // Validate the result
+    if (!mergedConfig || typeof mergedConfig !== 'object') {
+      throw new Error('Failed to generate valid configuration from template');
+    }
+    
     // Update the preview
-    templatePreview.value = customizedTemplate;
+    templatePreview.value = mergedConfig;
     
     // Close the modal
     showTemplateCustomizationModal.value = false;
-    
-    // Add the customized template to the configuration
-    const currentConfig = JSON.parse(JSON.stringify(jsonEditorContent.value));
-    
-    // Deep merge the customized template into the current config
-    const mergedConfig = deepMergeConfigs(currentConfig, customizedTemplate);
     
     // Update the editor content with the merged configuration
     jsonEditorContent.value = mergedConfig;
