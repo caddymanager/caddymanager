@@ -44,7 +44,7 @@
             "label": "Path Prefix",
             "type": "text",
             "placeholder": "/api/*",
-            "description": "Optional path prefix (e.g. /api/*)",
+            "description": "Optional path prefix (e.g. /api/*, /app/*, or leave empty for all paths)",
             "required": false
           },
           {

@@ -18,7 +18,7 @@
                     </div>
                 </div>
 
-                <div v-if="sparklineData && sparklineData.length" class="w-28 h-10 ml-4 flex-shrink-0">
+                <div v-if="sparklineData && sparklineData.length && polylinePoints" class="w-28 h-10 ml-4 flex-shrink-0">
                     <svg viewBox="0 0 100 30" preserveAspectRatio="none" class="w-full h-full">
                         <polyline :points="polylinePoints" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
@@ -69,7 +69,7 @@ const spinnerSize = computed(() => (props.size === 'large' ? 'large' : props.siz
 
 const formattedValue = computed(() => (props.value === null || props.value === undefined ? 'N/A' : props.value))
 
-const hasDelta = computed(() => props.delta !== null && props.delta !== undefined)
+const hasDelta = computed(() => Number.isFinite(props.delta) && props.delta !== 0)
 
 const valueClass = computed(() => {
 	switch (props.size) {
@@ -85,17 +85,36 @@ const deltaClass = computed(() => {
 })
 
 // Simple sparkline conversion: normalize data to svg coords (0..100 x, 0..30 y)
+// Cache the last valid points to prevent sparklines from disappearing during updates
 const polylinePoints = computed(() => {
-	const data = (props.sparklineData || []).filter(n => typeof n === 'number')
-	if (!data.length) return ''
-	const max = Math.max(...data)
-	const min = Math.min(...data)
-	const range = max - min || 1
-	return data.map((v, i) => {
-		const x = (i / (data.length - 1)) * 100
-		const y = 30 - ((v - min) / range) * 30
-		return `${x},${y}`
-	}).join(' ')
+	const data = (props.sparklineData || []).filter(n => typeof n === 'number' && !isNaN(n) && isFinite(n))
+	
+	// If we have valid data with at least 2 points, use it
+	if (data.length >= 2) {
+		const max = Math.max(...data)
+		const min = Math.min(...data)
+		const range = max - min || 1
+		
+		const points = data.map((v, i) => {
+			const x = (i / (data.length - 1)) * 100
+			const y = 30 - ((v - min) / range) * 30
+			
+			// Ensure coordinates are valid numbers
+			if (!isFinite(x) || !isFinite(y)) return null
+			
+			return `${x.toFixed(2)},${y.toFixed(2)}`
+		}).filter(point => point !== null).join(' ')
+		
+		// Cache the points for future use
+		if (points) {
+			polylinePoints._lastValidPoints = points
+		}
+		
+		return points
+	}
+	
+	// If we don't have enough valid data, return the last valid points if available
+	return polylinePoints._lastValidPoints || ''
 })
 </script>
 

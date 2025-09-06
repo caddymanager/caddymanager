@@ -72,14 +72,64 @@ const getConfigs = catchAsync(async (req, res) => {
  *     summary: Get compact metrics history used for sparklines
  *     tags:
  *       - Metrics
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Limit the number of historical entries returned (default: all)
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *         description: Comma-separated list of fields to include (e.g., "servers,configs")
  *     responses:
  *       200:
  *         description: Array of compact metric snapshots
  */
 const getHistory = catchAsync(async (req, res) => {
-  const data = await metricsService.getMetricsHistory()
-  res.status(200).json({ success: true, data })
-})
+  const { limit, fields } = req.query;
+  const options = {};
+  
+  if (limit) {
+    const parsedLimit = parseInt(limit, 10);
+    if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      options.limit = parsedLimit;
+    }
+  }
+  
+  if (fields) {
+    options.fields = fields.split(',').map(f => f.trim()).filter(f => f.length > 0);
+  }
+  
+  const data = await metricsService.getMetricsHistory(options);
+  res.status(200).json({ success: true, data });
+});
+
+/**
+ * @openapi
+ * /metrics/history/series/{metric}:
+ *   get:
+ *     summary: Get a specific metric series for sparklines
+ *     tags:
+ *       - Metrics
+ *     parameters:
+ *       - in: path
+ *         name: metric
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [servers.online, servers.total, configs.total, configs.domains, app.heapUsed, app.loadAverage, app.memoryUsagePercent]
+ *         description: The metric series to retrieve
+ *     responses:
+ *       200:
+ *         description: Array of metric values
+ */
+const getHistorySeries = catchAsync(async (req, res) => {
+  const { metric } = req.params;
+  const data = await metricsService.getMetricsHistorySeries(metric);
+  res.status(200).json({ success: true, data, metric });
+});
 
 /**
  * @openapi
@@ -264,6 +314,7 @@ module.exports = {
   getServers,
   getConfigs,
   getHistory,
+  getHistorySeries,
   clearHistory,
   getPrometheus
 }

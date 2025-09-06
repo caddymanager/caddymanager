@@ -104,7 +104,7 @@ const handleApplySuccess = (result) => {
   emit('apply-success', result);
   
   // Show success message
-  successMessage.value = `Configuration "${result.config.name}" was applied successfully to ${result.serverIds.length} server(s)`;
+  successMessage.value = `Configuration "${result.config?.name || 'Unknown'}" was applied successfully to ${result.serverIds?.length || 0} server(s)`;
   showSuccessMessage.value = true;
   
   // Hide success message after a delay

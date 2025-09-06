@@ -484,16 +484,16 @@ volumes:
     
     // Apply to each server
     for (const serverId of targetServerIds) {
+      const server = await caddyServersRepository.findById(serverId);
+      if (!server) {
+        results.failed.push({
+          serverId,
+          error: 'Server not found'
+        });
+        continue;
+      }
+      
       try {
-        const server = await caddyServersRepository.findById(serverId);
-        if (!server) {
-          results.failed.push({
-            serverId,
-            error: 'Server not found'
-          });
-          continue;
-        }
-        
         console.log(`Applying to server ${server.name} (${server._id}) at ${server.apiUrl}:${server.apiPort}${server.adminApiPath}`);
         
         // First, validate the configuration against this server
@@ -562,9 +562,38 @@ volumes:
         });
       } catch (error) {
         console.error(`Failed to apply config to server ${serverId}:`, error.message);
+        
+        // Log detailed error information for debugging
+        if (error.response) {
+          console.error(`HTTP Status: ${error.response.status}`);
+          console.error(`Response Headers:`, error.response.headers);
+          console.error(`Response Data:`, error.response.data);
+        } else if (error.request) {
+          console.error(`No response received:`, error.request);
+        } else {
+          console.error(`Error setting up request:`, error.message);
+        }
+        
+        // Extract more detailed error message
+        let detailedError = error.message;
+        if (error.response && error.response.data) {
+          if (typeof error.response.data === 'string') {
+            detailedError = error.response.data;
+          } else if (error.response.data.error) {
+            detailedError = error.response.data.error;
+          } else if (error.response.data.message) {
+            detailedError = error.response.data.message;
+          } else {
+            detailedError = JSON.stringify(error.response.data);
+          }
+        }
+        
         results.failed.push({
           serverId,
-          error: error.message
+          error: detailedError,
+          statusCode: error.response?.status,
+          httpMethod: 'POST',
+          endpoint: server.adminApiPath
         });
       }
     }
@@ -970,6 +999,7 @@ volumes:
       
       // Check for port conflicts
       const portMap = new Map();
+      
       for (const [serverName, serverConfig] of Object.entries(servers)) {
         if (!serverConfig.listen || !Array.isArray(serverConfig.listen)) {
           continue;
@@ -979,12 +1009,18 @@ volumes:
           const portMatch = listenAddr.match(/:(\d+)$/);
           if (portMatch) {
             const port = portMatch[1];
+            console.log(`Port ${port} found for server ${serverName}`);
             
             if (portMap.has(port)) {
+              const existingServer = portMap.get(port);
+              console.log(`Port conflict detected: ${existingServer} and ${serverName} both use port ${port}`);
+              
               // Check if hosts are specified to prevent conflict
-              if (!this.hasHostSpecificRoutes(serverConfig) || 
-                  !this.hasHostSpecificRoutes(servers[portMap.get(port)])) {
-                result.errors.push(`Port conflict: Multiple servers (${portMap.get(port)} and ${serverName}) listening on port ${port} without host-specific routes`);
+              const currentHasHosts = this.hasHostSpecificRoutes(serverConfig);
+              const existingHasHosts = this.hasHostSpecificRoutes(servers[existingServer]);
+              
+              if (!currentHasHosts || !existingHasHosts) {
+                result.errors.push(`Port conflict: Multiple servers (${existingServer} and ${serverName}) listening on port ${port} without host-specific routes`);
                 result.hasErrors = true;
               }
             }
@@ -992,10 +1028,26 @@ volumes:
           }
         }
         
-        // Check for load balancer issues
+        // Check for load balancer issues and domain configuration
         if (serverConfig.routes && Array.isArray(serverConfig.routes)) {
           for (let routeIndex = 0; routeIndex < serverConfig.routes.length; routeIndex++) {
             const route = serverConfig.routes[routeIndex];
+            
+            // Check domain/host configurations
+            if (route.match && Array.isArray(route.match)) {
+              route.match.forEach((matcher, matcherIndex) => {
+                if (matcher.host && Array.isArray(matcher.host)) {
+                  matcher.host.forEach(host => {
+                    // Check for common domain issues
+                    if (host.includes('*') && !host.startsWith('*.')) {
+                      result.warnings.push(`Wildcard domain "${host}" in server "${serverName}" should start with "*." for proper wildcard matching`);
+                      result.hasWarnings = true;
+                    }
+                  });
+                }
+              });
+            }
+            
             if (route.handle && Array.isArray(route.handle)) {
               for (let handlerIndex = 0; handlerIndex < route.handle.length; handlerIndex++) {
                 const handler = route.handle[handlerIndex];

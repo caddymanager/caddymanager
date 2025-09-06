@@ -362,6 +362,36 @@ const hasHostSpecificRoutes = (serverConfig, serverName) => {
 };
 
 // Apply the configuration
+const handleApplyConfigError = (err) => {
+  console.error('Error applying configuration:', err);
+  
+  let errorMessage = 'An error occurred while applying the configuration';
+  
+  if (err.response && err.response.data) {
+    const errorData = err.response.data;
+    
+    if (errorData.message) {
+      errorMessage = errorData.message;
+    } else if (errorData.error) {
+      errorMessage = errorData.error;
+    }
+    
+    // Check for specific Caddy configuration errors
+    if (errorMessage.includes('listener address repeated')) {
+      errorMessage = `Port Conflict: ${errorMessage}\n\nThis usually means:\n• Multiple servers are trying to use the same port\n• The port is already in use by the current configuration\n• Host-specific routing is needed to differentiate services`;
+    } else if (errorMessage.includes('cannot unmarshal string into Go value')) {
+      errorMessage = `Configuration Format Error: ${errorMessage}\n\nThis usually indicates a JSON structure issue in your configuration.`;
+    } else if (errorMessage.includes('unknown field "lb_policy"')) {
+      errorMessage = 'Configuration Error: The JSON configuration uses "lb_policy" which is not valid in Caddy JSON format. Please change it to "load_balancing: { selection_policy: "..." }" instead.';
+    }
+  } else if (err.message) {
+    errorMessage = err.message;
+  }
+  
+  error.value = errorMessage;
+  emit('error', errorMessage);
+};
+
 const applyConfiguration = async () => {
   if (isProcessing.value || !isValid.value) return;
   
@@ -401,34 +431,42 @@ const applyConfiguration = async () => {
     // Call the store method to apply the configuration
     const result = await configsStore.applyConfig(props.config._id, serverIds);
     
-    if (result) {
+    if (result && result.success) {
       emit('success', {
         config: props.config,
         serverIds,
         result
       });
       
-      statusMessage.value = `Configuration applied successfully to ${result.servers.length} server(s)`;
+      statusMessage.value = `Configuration applied successfully to ${result.servers?.length || 0} server(s)`;
       
       // Close modal after a short delay
       setTimeout(() => {
         emit('update:modelValue', false);
       }, 2000);
     } else {
-      error.value = 'Failed to apply configuration. See console for details.';
-      emit('error', 'Failed to apply configuration');
+      // Extract detailed error information from the result
+      let errorMessage = 'Failed to apply configuration';
+      
+      if (result && result.data && result.data.failed && result.data.failed.length > 0) {
+        const failedServer = result.data.failed[0];
+        errorMessage = failedServer.error || result.message || errorMessage;
+        
+        // Check for specific Caddy configuration errors
+        if (errorMessage.includes('listener address repeated')) {
+          errorMessage = `Port Conflict: ${errorMessage}\n\nThis usually means:\n• Multiple servers are trying to use the same port\n• The port is already in use by the current configuration\n• Host-specific routing is needed to differentiate services`;
+        } else if (errorMessage.includes('cannot unmarshal string into Go value')) {
+          errorMessage = `Configuration Format Error: ${errorMessage}\n\nThis usually indicates a JSON structure issue in your configuration.`;
+        }
+      } else if (result && result.message) {
+        errorMessage = result.message;
+      }
+      
+      error.value = errorMessage;
+      emit('error', errorMessage);
     }
   } catch (err) {
-    console.error('Error applying configuration:', err);
-    
-    // Check for specific error types
-    if (err.message && err.message.includes('unknown field "lb_policy"')) {
-      error.value = 'Failed to apply configuration: The JSON configuration uses "lb_policy" which is not valid in Caddy JSON format. Please change it to "load_balancing: { selection_policy: "..." }" instead.';
-    } else {
-      error.value = err.message || 'An error occurred while applying the configuration';
-    }
-    
-    emit('error', error.value);
+    handleApplyConfigError(err);
   } finally {
     isProcessing.value = false;
   }
