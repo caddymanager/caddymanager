@@ -158,8 +158,10 @@
       confirm-text="Apply Configuration"
       cancel-text="Cancel"
       :is-processing="isApplying"
+      processing-text="Applying configuration..."
       :error="applyError"
       @confirm="confirmApplyConfig"
+      @cancel="cancelApplyConfig"
     />
     
     <!-- Error Details Modal -->
@@ -473,7 +475,24 @@ const confirmApplyConfig = async () => {
       showApplyConfirmModal.value = false;
       await loadServerConfig();
     } else {
-      applyError.value = 'Failed to apply configuration';
+      // Extract detailed error information from the result
+      let errorMessage = 'Failed to apply configuration';
+      
+      if (result && result.data && result.data.failed && result.data.failed.length > 0) {
+        const failedServer = result.data.failed[0];
+        errorMessage = failedServer.error || result.message || errorMessage;
+        
+        // Check for specific Caddy configuration errors
+        if (errorMessage.includes('listener address repeated')) {
+          errorMessage = `Port Conflict: ${errorMessage}\n\nThis usually means:\n• Multiple servers are trying to use the same port\n• The port is already in use by the current configuration\n• Host-specific routing is needed to differentiate services`;
+        } else if (errorMessage.includes('cannot unmarshal string into Go value')) {
+          errorMessage = `Configuration Format Error: ${errorMessage}\n\nThis usually indicates a JSON structure issue in your configuration.`;
+        }
+      } else if (result && result.message) {
+        errorMessage = result.message;
+      }
+      
+      applyError.value = errorMessage;
     }
   } catch (err) {
     handleApplyConfigError(err);
@@ -482,48 +501,69 @@ const confirmApplyConfig = async () => {
   }
 };
 
+// Add a cancel handler for the modal
+const cancelApplyConfig = () => {
+  applyError.value = null;
+  isApplying.value = false;
+};
+
 // Update error handling in various methods, for example:
 const handleApplyConfigError = (error) => {
-  isLoading.value = false;
-  
   // Extract meaningful error messages from various error formats
   let errorMessage = '';
+  
   if (typeof error === 'string') {
     errorMessage = error;
+  } else if (error?.response?.data) {
+    // Handle API response errors
+    const responseData = error.response.data;
+    
+    if (responseData.data && responseData.data.failed && responseData.data.failed.length > 0) {
+      const failedServer = responseData.data.failed[0];
+      errorMessage = failedServer.error || responseData.message || 'Configuration failed';
+    } else if (responseData.message) {
+      errorMessage = responseData.message;
+    } else if (responseData.error) {
+      errorMessage = responseData.error;
+    } else {
+      errorMessage = JSON.stringify(responseData);
+    }
   } else if (error?.message) {
     errorMessage = error.message;
   } else {
     errorMessage = 'An unknown error occurred';
   }
   
-  // Check for specific Caddy errors
-  if (errorMessage.includes('cannot unmarshal string into Go value of type map') &&
-      errorMessage.includes('selection_policy')) {
-    configErrors.value = `Error: Load balancing selection_policy must be an object with a "policy" field, not a string.
-    
-Example of correct format:
+  // Format specific Caddy errors for better user understanding
+  if (errorMessage.includes('listener address repeated')) {
+    applyError.value = `Port Conflict Error:
+${errorMessage}
+
+Common solutions:
+• Check if another service is using the same port
+• Use host-specific routing to differentiate services
+• Choose a different port for your configuration`;
+  } else if (errorMessage.includes('cannot unmarshal string into Go value') && errorMessage.includes('selection_policy')) {
+    applyError.value = `Load Balancer Configuration Error:
+The selection_policy must be an object, not a string.
+
+Correct format:
 "load_balancing": {
   "selection_policy": {
     "policy": "round_robin"
   }
 }
 
-Instead of:
-"load_balancing": {
-  "selection_policy": "round_robin"
-}`;
-    
-    showDetailedError.value = true;
-  } else {
-    configErrors.value = errorMessage;
-  }
+Current error: ${errorMessage}`;
+  } else if (errorMessage.includes('invalid configuration')) {
+    applyError.value = `Configuration Validation Error:
+${errorMessage}
 
-  // Display notification
-  emit('show-notification', {
-    type: 'error',
-    message: `Failed to apply configuration: ${errorMessage.substring(0, 100)}${errorMessage.length > 100 ? '...' : ''}`
-  });
-}
+Please check your configuration for syntax errors or invalid settings.`;
+  } else {
+    applyError.value = errorMessage;
+  }
+};
 
 // Modify the template to include an error details section
 const toggleErrorDetails = () => {
