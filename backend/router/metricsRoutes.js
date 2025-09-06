@@ -80,6 +80,25 @@ router.get('/history', metricsController.getHistory)
 
 /**
  * @openapi
+ * /api/v1/metrics/history/series/{metric}:
+ *   get:
+ *     tags: [Metrics]
+ *     summary: Get a specific metric series for sparklines
+ *     parameters:
+ *       - in: path
+ *         name: metric
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The metric series to retrieve
+ *     responses:
+ *       200:
+ *         description: Array of metric values
+ */
+router.get('/history/series/:metric', metricsController.getHistorySeries)
+
+/**
+ * @openapi
  * /api/v1/metrics/history:
  *   delete:
  *     tags: [Metrics]

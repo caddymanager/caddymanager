@@ -68,18 +68,127 @@ const metricsHistory = []
 
 function pushMetricsSnapshot(snapshot) {
   try {
-    metricsHistory.push(snapshot)
+    // Validate snapshot has required structure
+    if (!snapshot || !snapshot.timestamp) {
+      console.warn('Invalid metrics snapshot - missing timestamp');
+      return;
+    }
+
+    // Ensure numeric values are actually numbers and not NaN
+    const cleanSnapshot = {
+      timestamp: snapshot.timestamp,
+      servers: {
+        total: isValidNumber(snapshot.servers?.total) ? snapshot.servers.total : 0,
+        online: isValidNumber(snapshot.servers?.online) ? snapshot.servers.online : 0,
+        offline: isValidNumber(snapshot.servers?.offline) ? snapshot.servers.offline : 0
+      },
+      configs: {
+        total: isValidNumber(snapshot.configs?.total) ? snapshot.configs.total : 0,
+        domains: isValidNumber(snapshot.configs?.domains) ? snapshot.configs.domains : 0
+      },
+      audit: {
+        total: isValidNumber(snapshot.audit?.total) ? snapshot.audit.total : 0
+      },
+      app: {
+        uptimeSeconds: isValidNumber(snapshot.app?.uptimeSeconds) ? snapshot.app.uptimeSeconds : 0,
+        heapUsed: isValidNumber(snapshot.app?.heapUsed) ? snapshot.app.heapUsed : 0,
+        heapTotal: isValidNumber(snapshot.app?.heapTotal) ? snapshot.app.heapTotal : 0,
+        rss: isValidNumber(snapshot.app?.rss) ? snapshot.app.rss : 0,
+        loadAverage: Array.isArray(snapshot.app?.loadAverage) ? 
+          snapshot.app.loadAverage.filter(v => isValidNumber(v)) : 
+          (isValidNumber(snapshot.app?.loadAverage) ? [snapshot.app.loadAverage] : []),
+        cpus: isValidNumber(snapshot.app?.cpus) ? snapshot.app.cpus : null,
+        freeMem: isValidNumber(snapshot.app?.freeMem) ? snapshot.app.freeMem : 0,
+        totalMem: isValidNumber(snapshot.app?.totalMem) ? snapshot.app.totalMem : 0
+      }
+    };
+
+    metricsHistory.push(cleanSnapshot);
+    
     // keep only the last N samples
     if (metricsHistory.length > METRICS_HISTORY_MAX) {
-      metricsHistory.splice(0, metricsHistory.length - METRICS_HISTORY_MAX)
+      metricsHistory.splice(0, metricsHistory.length - METRICS_HISTORY_MAX);
     }
   } catch (e) {
+    console.warn('Failed to push metrics snapshot:', e.message);
     // non-fatal; don't break metrics
   }
 }
 
-function getMetricsHistory() {
-  return metricsHistory.slice()
+// Helper function to validate numbers
+function isValidNumber(value) {
+  return typeof value === 'number' && !isNaN(value) && isFinite(value);
+}
+
+function getMetricsHistory(options = {}) {
+  try {
+    const { limit, fields } = options;
+    let history = metricsHistory.slice();
+
+    // Apply limit if specified
+    if (limit && typeof limit === 'number' && limit > 0) {
+      history = history.slice(-limit);
+    }
+
+    // Filter fields if specified
+    if (fields && Array.isArray(fields) && fields.length > 0) {
+      history = history.map(snapshot => {
+        const filtered = { timestamp: snapshot.timestamp };
+        fields.forEach(field => {
+          if (snapshot[field]) {
+            filtered[field] = snapshot[field];
+          }
+        });
+        return filtered;
+      });
+    }
+
+    return history;
+  } catch (e) {
+    console.warn('Failed to get metrics history:', e.message);
+    return [];
+  }
+}
+
+function getMetricsHistorySeries(metric) {
+  try {
+    const history = metricsHistory.slice();
+    
+    switch (metric) {
+      case 'servers.online':
+        return history.map(s => s.servers?.online).filter(v => isValidNumber(v));
+      case 'servers.total':
+        return history.map(s => s.servers?.total).filter(v => isValidNumber(v));
+      case 'configs.total':
+        return history.map(s => s.configs?.total).filter(v => isValidNumber(v));
+      case 'configs.domains':
+        return history.map(s => s.configs?.domains).filter(v => isValidNumber(v));
+      case 'app.heapUsed':
+        return history.map(s => s.app?.heapUsed).filter(v => isValidNumber(v));
+      case 'app.loadAverage':
+        return history.map(s => {
+          const la = s.app?.loadAverage;
+          if (Array.isArray(la) && la.length > 0) {
+            return isValidNumber(la[0]) ? la[0] : null;
+          }
+          return isValidNumber(la) ? la : null;
+        }).filter(v => v !== null);
+      case 'app.memoryUsagePercent':
+        return history.map(s => {
+          const used = s.app?.heapUsed;
+          const total = s.app?.totalMem;
+          if (isValidNumber(used) && isValidNumber(total) && total > 0) {
+            return (used / total) * 100;
+          }
+          return null;
+        }).filter(v => v !== null);
+      default:
+        return [];
+    }
+  } catch (e) {
+    console.warn(`Failed to get metrics series for ${metric}:`, e.message);
+    return [];
+  }
 }
 
 function clearMetricsHistory() {
@@ -359,26 +468,32 @@ async function getAllMetrics() {
     const snap = {
       timestamp: payload.timestamp,
       servers: {
-        total: servers?.total ?? null,
-        online: servers?.online ?? null,
-        offline: servers?.offline ?? null
+        total: servers?.total ?? 0,
+        online: servers?.online ?? 0,
+        offline: servers?.offline ?? 0
       },
       configs: {
-        total: configs?.totalConfigs ?? null,
-        domains: configs?.totalDomains ?? null
+        total: configs?.totalConfigs ?? 0,
+        domains: configs?.totalDomains ?? 0
       },
       audit: {
-        total: audit?.total ?? null
+        total: audit?.total ?? 0
       },
       app: {
-        uptimeSeconds: app?.uptimeSeconds ?? null,
-        heapUsed: app?.memory?.heapUsed ?? null,
-        loadAverage: app?.loadAverage ?? null
+        uptimeSeconds: app?.uptimeSeconds ?? 0,
+        heapUsed: app?.memory?.heapUsed ?? 0,
+        heapTotal: app?.memory?.heapTotal ?? 0,
+        rss: app?.memory?.rss ?? 0,
+        loadAverage: app?.loadAverage ?? [],
+        cpus: app?.cpus ?? null,
+        freeMem: app?.systemMemory?.free ?? 0,
+        totalMem: app?.systemMemory?.total ?? 0
       }
-    }
+    };
 
-    pushMetricsSnapshot(snap)
+    pushMetricsSnapshot(snap);
   } catch (e) {
+    console.warn('Failed to create metrics snapshot:', e.message);
     // ignore history push failures
   }
 
@@ -391,6 +506,7 @@ module.exports = {
   getConfigMetrics,
   getAuditMetrics,
   getMetricsHistory,
+  getMetricsHistorySeries,
   clearMetricsHistory,
   getAllMetrics
 }

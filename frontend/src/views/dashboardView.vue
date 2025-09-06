@@ -58,8 +58,8 @@ const totalServersPanel = computed(() => {
   const prevSeries = serverOnlineSeries.value || []
   const prev = prevSeries.length > 1 ? prevSeries[prevSeries.length - 2] : null
   const last = prevSeries.length ? prevSeries[prevSeries.length - 1] : (typeof online === 'number' ? online : null)
-  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number') ? (last - prev) : null
-  return { title: 'Total Servers', value: total, delta, sparklineData: prevSeries }
+  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number' && !isNaN(prev) && !isNaN(last)) ? (last - prev) : null
+  return { title: 'Total Servers', value: total || 0, delta, sparklineData: prevSeries }
 })
 
 /**
@@ -74,7 +74,7 @@ const configsPanel = computed(() => {
   const ds = domainSeries.value || []
   const last = ds.length ? ds[ds.length - 1] : (cfgCount !== null ? cfgCount : null)
   const prev = ds.length > 1 ? ds[ds.length - 2] : null
-  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number') ? (last - prev) : null
+  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number' && !isNaN(prev) && !isNaN(last)) ? (last - prev) : null
   return { title: 'Configs', value: cfgCount !== null ? cfgCount : (last !== null ? last : 'N/A'), delta, sparklineData: ds }
 })
 
@@ -166,26 +166,74 @@ const serverItems = computed(() => {
   ]
 })
 
-// Sparklines from metrics history
+// Sparklines from metrics history (with caching to prevent flicker)
 const serverOnlineSeries = computed(() => {
   const h = history.value || []
-  return h.map(s => (s.servers && typeof s.servers.online === 'number') ? s.servers.online : null).filter(v => v !== null)
+  if (h.length === 0) {
+    // Return cached data if available, or empty array
+    return serverOnlineSeries._cachedValue || []
+  }
+  
+  const series = h.map(s => {
+    const online = s.servers && typeof s.servers.online === 'number' ? s.servers.online : null
+    return online
+  }).filter(v => v !== null && !isNaN(v) && isFinite(v))
+  
+  const result = series.length >= 2 ? series : (serverOnlineSeries._cachedValue || [])
+  
+  // Cache the result for next time
+  if (result.length >= 2) {
+    serverOnlineSeries._cachedValue = result
+  }
+  
+  return result
 })
 
 const domainSeries = computed(() => {
   const h = history.value || []
-  return h.map(s => (s.configs && typeof s.configs.domains === 'number') ? s.configs.domains : null).filter(v => v !== null)
+  if (h.length === 0) {
+    // Return cached data if available, or empty array
+    return domainSeries._cachedValue || []
+  }
+  
+  const series = h.map(s => {
+    const domains = s.configs && typeof s.configs.domains === 'number' ? s.configs.domains : null
+    return domains
+  }).filter(v => v !== null && !isNaN(v) && isFinite(v))
+  
+  const result = series.length >= 2 ? series : (domainSeries._cachedValue || [])
+  
+  // Cache the result for next time
+  if (result.length >= 2) {
+    domainSeries._cachedValue = result
+  }
+  
+  return result
 })
 
-// CPU load series from metrics history (prefer 1m load if array provided)
+// CPU load series from metrics history (prefer 1m load if array provided, with caching)
 const cpuSeries = computed(() => {
   const h = history.value || []
-  return h.map(s => {
+  if (h.length === 0) {
+    // Return cached data if available, or empty array
+    return cpuSeries._cachedValue || []
+  }
+  
+  const series = h.map(s => {
     const la = s.app && s.app.loadAverage
     if (Array.isArray(la) && la.length) return typeof la[0] === 'number' ? la[0] : null
     if (typeof la === 'number') return la
     return null
-  }).filter(v => v !== null)
+  }).filter(v => v !== null && !isNaN(v) && isFinite(v))
+  
+  const result = series.length >= 2 ? series : (cpuSeries._cachedValue || [])
+  
+  // Cache the result for next time
+  if (result.length >= 2) {
+    cpuSeries._cachedValue = result
+  }
+  
+  return result
 })
 
 // Small helper panels derived from history (value = latest, delta = latest - previous)
@@ -193,25 +241,25 @@ const onlinePanel = computed(() => {
   const s = serverOnlineSeries.value || []
   const last = s.length ? s[s.length - 1] : (metrics && metrics.value && metrics.value.servers ? metrics.value.servers.online : (serversStore.servers || []).filter(x => x.status === 'online').length)
   const prev = s.length > 1 ? s[s.length - 2] : null
-  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number') ? (last - prev) : null
-  return { title: 'Online Servers', value: last, delta, sparklineData: s }
+  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number' && !isNaN(prev) && !isNaN(last)) ? (last - prev) : null
+  return { title: 'Online Servers', value: last || 0, delta, sparklineData: s }
 })
 
 const domainsPanel = computed(() => {
   const s = domainSeries.value || []
   const last = s.length ? s[s.length - 1] : (metrics && metrics.value && metrics.value.configs ? metrics.value.configs.totalDomains : null)
   const prev = s.length > 1 ? s[s.length - 2] : null
-  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number') ? (last - prev) : null
-  return { title: 'Domains', value: last, delta, sparklineData: s }
+  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number' && !isNaN(prev) && !isNaN(last)) ? (last - prev) : null
+  return { title: 'Domains', value: last || 0, delta, sparklineData: s }
 })
 
 // CPU load panel (value = latest 1m load, delta = diff from previous sample)
 const cpuPanel = computed(() => {
   const s = cpuSeries.value || []
   const lastRaw = s.length ? s[s.length - 1] : (metrics && metrics.value && metrics.value.app ? (Array.isArray(metrics.value.app.loadAverage) ? metrics.value.app.loadAverage[0] : metrics.value.app.loadAverage) : null)
-  const last = (typeof lastRaw === 'number') ? Number(lastRaw) : null
+  const last = (typeof lastRaw === 'number' && !isNaN(lastRaw) && isFinite(lastRaw)) ? Number(lastRaw) : null
   const prev = s.length > 1 ? s[s.length - 2] : null
-  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number') ? Number((last - prev)) : null
+  const delta = (prev !== null && typeof last === 'number' && typeof prev === 'number' && !isNaN(prev) && !isNaN(last)) ? Number((last - prev)) : null
   // Format sparkline data as numbers (already numbers) and return rounded value for display
   return { title: 'CPU Load (1m)', value: last !== null ? Number(last.toFixed(2)) : 'N/A', delta: delta !== null ? Number(delta.toFixed(2)) : null, sparklineData: s }
 })
@@ -287,13 +335,22 @@ async function doUpdate() {
         metrics.value = maybeMetricsRes.data.data || null
       }
 
-      // refresh history
+      // refresh history (only update if we get valid data)
       try {
         const hres = await apiService.get('/metrics/history')
         // backend returns { success: true, data: [ ... ] }
-        history.value = hres?.data?.data || []
+        const newHistory = hres?.data?.data
+        if (Array.isArray(newHistory) && newHistory.length > 0) {
+          // Only update if we have valid data, preserve existing data if API fails
+          history.value = newHistory
+        } else if (!history.value || history.value.length === 0) {
+          // Only set to empty array if we don't have any existing data
+          history.value = []
+        }
+        // If newHistory is empty but we have existing data, keep the existing data
       } catch (e) {
-        // ignore
+        // Don't clear existing history on error, just log it
+        console.warn('Failed to fetch metrics history:', e.message)
       }
 
     // Notify other components (BuildInfoComp) to refresh if they listen for this event
