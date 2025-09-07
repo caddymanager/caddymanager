@@ -181,8 +181,6 @@ jobs:
             MONGODB_URI=
             CORS_ORIGIN=http://localhost:5173
             LOG_LEVEL=debug
-            DEFAULT_CADDY_ADMIN_USER=admin
-            DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
             CADDY_SANDBOX_URL=http://localhost:2019
             PING_INTERVAL=30000
             PING_TIMEOUT=2000

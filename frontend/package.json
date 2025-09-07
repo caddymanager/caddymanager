@@ -1,6 +1,6 @@
 {
   "name": "caddy-manager-frontend",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +14,7 @@
     "@heroicons/vue": "^2.2.0",
     "@kyvg/vue3-notification": "^3.4.1",
     "@tailwindcss/vite": "^4.1.4",
+    "ace-builds": "^1.43.2",
     "axios": "^1.8.4",
     "fuse.js": "^7.1.0",
     "pinia": "^3.0.1",

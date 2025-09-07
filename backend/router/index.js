@@ -5,6 +5,7 @@ const authRoutes = require('./authRoutes');
 const apiKeyRoutes = require('./apiKeyRoutes');
 const auditLogRoutes = require('./auditLogRoutes');
 const buildInfoRoutes = require('./buildInfoRoutes');
+const metricsRoutes = require('./metricsRoutes');
 
 const router = express.Router();
 
@@ -50,9 +51,12 @@ router.use(`${API_PREFIX}/audit-logs`, auditLogRoutes);
 // Mount Build Info routes
 router.use(`${API_PREFIX}/build-info`, buildInfoRoutes);
 
+// Mount Metrics routes
+router.use(`${API_PREFIX}/metrics`, metricsRoutes);
+
 /**
  * @swagger
- * /health:
+ * /api/v1/health:
  *   get:
  *     summary: Health check endpoint
  *     description: Check if the API is running

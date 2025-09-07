@@ -5,16 +5,12 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Caddy Manager API',
-      version: '1.0.0',
+      version: '0.0.2',
       description: 'API documentation for Caddy Manager application',
       license: {
         name: 'MIT',
         url: 'https://opensource.org/licenses/MIT',
-      },
-      contact: {
-        name: 'API Support',
-        email: 'support@caddymanager.example.com',
-      },
+      }
     },
     servers: [
       {
@@ -212,7 +208,6 @@ const options = {
         }
       },
     },
-    // Remove security section
   },
   apis: [
     './router/*.js',

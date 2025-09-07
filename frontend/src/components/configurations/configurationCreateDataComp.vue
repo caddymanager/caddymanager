@@ -24,6 +24,15 @@
                 <button
                   type="button"
                   class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
+                  :class="editMode === 'ace' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                  @click="editMode = 'ace'"
+                >
+                  <CodeBracketIcon class="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                  Raw JSON (Ace)
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 text-xs flex items-center focus:outline-none"
                   :class="editMode === 'template' ? 'bg-secondary text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'"
                   @click="editMode = 'template'"
                 >
@@ -85,6 +94,26 @@
             </div>
             <p class="mt-1 text-xs text-gray-500">
               Edit the JSON configuration directly. Changes will be saved when you click "Create Configuration".
+            </p>
+          </div>
+
+          <!-- Ace Editor Mode -->
+          <div v-if="editMode === 'ace'" class="mb-4">
+            <label class="block text-sm font-medium text-tertiary mb-2">Raw JSON (Ace Editor)</label>
+            <ace-editor-sub-comp
+              :modelValue="aceEditorContent"
+              @update:modelValue="onAceEditorInput"
+              mode="json"
+              theme="monokai"
+              :minLines="12"
+              :maxLines="40"
+              :readOnly="false"
+            />
+            <div v-if="aceJsonError" class="bg-red-50 border-t border-red-200 p-2 text-xs text-red-700">
+              {{ aceJsonError }}
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              Edit the raw JSON directly. Changes will be synced to the main configuration.
             </p>
           </div>
           
@@ -222,16 +251,12 @@ example.com {
                   
                   <div>
                     <label for="serverSelect" class="sr-only">Select Caddy Server</label>
-                    <select
+                    <SelectFieldComp
                       id="serverSelect"
                       v-model="selectedServerId"
-                      class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6"
-                    >
-                      <option value="">Default Sandbox</option>
-                      <option v-for="server in servers" :key="server._id" :value="server._id">
-                        {{ server.name }}
-                      </option>
-                    </select>
+                      :options="[{ value: '', label: 'Default Sandbox' }, ...(servers.map(s => ({ value: s._id, label: s.name })))]"
+                      extraClass="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6"
+                    />
                   </div>
                 </div>
                 
@@ -307,22 +332,20 @@ example.com {
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex flex-col mb-2">
-          <label class="block text-sm font-medium text-tertiary mb-1">Hostname</label>
-          <input 
-            v-model="proxyForm.hostname" 
-            type="text" 
+          <InputFieldComp
+            v-model="proxyForm.hostname"
+            label="Hostname"
             placeholder="example.com"
-            class="placeholder:text-gray-300 text-tertiary block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 text-tertiary block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">The domain name for this proxy.</p>
         </div>
         <div class="flex flex-col mb-2">
-          <label class="block text-sm font-medium text-tertiary mb-1">Listen Address</label>
-          <input 
-            v-model="proxyForm.listen" 
-            type="text" 
+          <InputFieldComp
+            v-model="proxyForm.listen"
+            label="Listen Address"
             placeholder=":80"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <p class="mt-1 text-xs text-gray-500">Port to listen on, e.g. :80 or :443</p>
         </div>
@@ -342,11 +365,10 @@ example.com {
         </div>
         
         <div v-for="(target, index) in proxyForm.targets" :key="index" class="flex items-center gap-2 mb-2">
-          <input 
-            v-model="target.dial" 
-            type="text" 
+          <InputFieldComp
+            v-model="target.dial"
             placeholder="localhost:8080"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
           <button 
             type="button"
@@ -364,36 +386,32 @@ example.com {
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col mb-2">
-            <label class="block text-sm font-medium text-tertiary mb-1">Path Prefix (optional)</label>
-            <input 
-              v-model="proxyForm.pathPrefix" 
-              type="text" 
+            <InputFieldComp
+              v-model="proxyForm.pathPrefix"
+              label="Path Prefix (optional)"
               placeholder="/api/*"
-              class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
             <p class="mt-1 text-xs text-gray-500">Limit proxy to a specific path.</p>
           </div>
           
           <div class="flex flex-col mb-2">
-            <label class="block text-sm font-medium text-tertiary mb-1">Load Balancing Policy</label>
-            <select 
-              v-model="proxyForm.lbPolicy" 
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            >
-              <option value="">Default (random)</option>
-              <option value="round_robin">Round Robin</option>
-              <option value="least_conn">Least Connections</option>
-              <option value="ip_hash">IP Hash</option>
-            </select>
+            <SelectFieldComp
+              v-model="proxyForm.lbPolicy"
+              :options="[
+                { value: '', label: 'Default (random)' },
+                { value: 'round_robin', label: 'Round Robin' },
+                { value: 'least_conn', label: 'Least Connections' },
+                { value: 'ip_hash', label: 'IP Hash' }
+              ]"
+              label="Load Balancing Policy"
+              extraClass="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            />
           </div>
         </div>
         
         <div class="mt-4">
-          <label class="relative inline-flex items-center">
-            <input type="checkbox" v-model="proxyForm.enableTls" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary-dark"></div>
-            <span class="ml-3 text-sm font-medium text-tertiary">Enable TLS (HTTPS)</span>
-          </label>
+          <CheckboxFieldComp v-model="proxyForm.enableTls">Enable TLS (HTTPS)</CheckboxFieldComp>
         </div>
       </div>
     </div>
@@ -427,7 +445,7 @@ example.com {
                 v-model="templateCustomization[field.id]" 
                 type="text" 
                 :placeholder="field.placeholder"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 :required="field.required"
               />
               
@@ -436,7 +454,7 @@ example.com {
                 v-model="templateCustomization[field.id]" 
                 :placeholder="field.placeholder"
                 rows="3"
-                class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
+                class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
                 :required="field.required"
               ></textarea>
               
@@ -472,6 +490,10 @@ example.com {
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import aceEditorSubComp from '@/components/util/aceEditorSubComp.vue'
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import SelectFieldComp from '@/components/util/selectFieldComp.vue'
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue'
 import { useCaddyConfigsStore } from '@/stores/caddyConfigsStore'
 import { useCaddyServersStore } from '@/stores/caddyServersStore'
 import VueJsonPretty from 'vue-json-pretty'
@@ -507,6 +529,7 @@ import {
   DocumentPlusIcon
 } from '@heroicons/vue/24/outline'
 
+
 const emit = defineEmits(['json-content-updated', 'json-validation'])
 
 const router = useRouter()
@@ -533,6 +556,31 @@ const jsonEditorContent = ref({
   }
 })
 const jsonValidationError = ref(null)
+
+// Ace Editor state (must be after jsonEditorContent and editMode)
+const aceEditorContent = ref('')
+const aceJsonError = ref(null)
+
+// Sync Ace editor with JSON editor
+watch([jsonEditorContent, editMode], ([val, mode]) => {
+  if (mode === 'ace') {
+    aceEditorContent.value = JSON.stringify(val, null, 2)
+  }
+})
+
+function onAceEditorInput(val) {
+  aceEditorContent.value = val
+  if (editMode.value === 'ace') {
+    try {
+      const parsed = JSON.parse(val)
+      jsonEditorContent.value = parsed
+      emit('json-content-updated', parsed)
+      aceJsonError.value = null
+    } catch (e) {
+      aceJsonError.value = 'Invalid JSON: ' + e.message
+    }
+  }
+}
 
 // Handle JSON changes from the editor
 function onJsonChange(value) {
@@ -637,39 +685,34 @@ function addSelectedTemplate() {
   isAddingTemplate.value = true
 
   try {
-    // Start with the current configuration
-    const currentConfig = JSON.parse(JSON.stringify(jsonEditorContent.value))
-    
-    // Get the template configuration
-    const template = templateService.getTemplateById(selectedTemplate.value)
-    if (!template) {
-      throw new Error('Template not found')
-    }
-    
-    const templateConfig = JSON.parse(JSON.stringify(template.config))
-    
-    // Deep merge the template into the current config
-    const mergedConfig = deepMergeConfigs(currentConfig, templateConfig)
+    // Use the intelligent merging from templateService
+    const mergedConfig = templateService.generateConfigFromTemplate(
+      selectedTemplate.value, 
+      templateCustomization.value,
+      jsonEditorContent.value
+    );
     
     // Update the editor content with the merged configuration
-    jsonEditorContent.value = mergedConfig
+    jsonEditorContent.value = mergedConfig;
     
     // Emit the updated content to the parent component
-    emit('json-content-updated', mergedConfig)
-    emit('json-validation', true)
+    emit('json-content-updated', mergedConfig);
+    emit('json-validation', true);
     
     // Show success message
-    formError.value = null
-    const { notify } = useNotification()
+    formError.value = null;
+    const { notify } = useNotification();
+    
+    const template = templateService.getTemplateById(selectedTemplate.value);
     notify({
       title: "Template Added",
       text: `Successfully added ${template.name} template to your configuration`,
       type: "success",
       duration: 3000
-    })
+    });
     
     // Switch to editor mode to show the changes
-    editMode.value = 'editor'
+    editMode.value = 'editor';
   } catch (err) {
     console.error('Error adding template:', err)
     formError.value = `Failed to add template: ${err.message}`
@@ -960,13 +1003,11 @@ function useConversionResult() {
 const duplicateEntries = ref([])
 
 function checkForDuplicates() {
+  // Ensure duplicateEntries is always an array
   duplicateEntries.value = []
 
-  // For a new configuration, this mostly checks the current
-  // edited JSON content
   try {
     const config = jsonEditorContent.value;
-    
     // Example check for duplicate hostnames
     const hostnames = new Set()
     const duplicates = []
@@ -974,7 +1015,6 @@ function checkForDuplicates() {
     // Check for hosts in HTTP servers routes
     if (config?.apps?.http?.servers) {
       const servers = config.apps.http.servers;
-      
       Object.values(servers).forEach(server => {
         if (server.routes && Array.isArray(server.routes)) {
           server.routes.forEach(route => {
@@ -1095,24 +1135,33 @@ function applyAndUseCustomizedTemplate() {
 
     // Get the template for display purposes
     const template = templateService.getTemplateById(selectedTemplate.value);
+    if (!template) {
+      throw new Error('Template not found');
+    }
 
-    // Use the templateService to generate the customized template
-    const customizedTemplate = templateService.generateConfigFromTemplate(
+    // Validate customization data
+    if (!templateCustomization.value || typeof templateCustomization.value !== 'object') {
+      console.warn('Invalid customization data, using defaults');
+      templateCustomization.value = {};
+    }
+
+    // Use the templateService with intelligent merging
+    const mergedConfig = templateService.generateConfigFromTemplate(
       selectedTemplate.value, 
-      templateCustomization.value
+      templateCustomization.value,
+      jsonEditorContent.value
     );
     
+    // Validate the result
+    if (!mergedConfig || typeof mergedConfig !== 'object') {
+      throw new Error('Failed to generate valid configuration from template');
+    }
+    
     // Update the preview
-    templatePreview.value = customizedTemplate;
+    templatePreview.value = mergedConfig;
     
     // Close the modal
     showTemplateCustomizationModal.value = false;
-    
-    // Add the customized template to the configuration
-    const currentConfig = JSON.parse(JSON.stringify(jsonEditorContent.value));
-    
-    // Deep merge the customized template into the current config
-    const mergedConfig = deepMergeConfigs(currentConfig, customizedTemplate);
     
     // Update the editor content with the merged configuration
     jsonEditorContent.value = mergedConfig;

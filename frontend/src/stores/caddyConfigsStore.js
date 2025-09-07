@@ -278,10 +278,8 @@ export const useCaddyConfigsStore = defineStore('caddyConfigs', () => {
         requestBody
       );
       
-      console.log('Apply config response:', response.data);
-      
-      // If we get any response, consider it a success since the backend returns 200
-      if (response.data) {
+      // Check if the response indicates success or failure
+      if (response.data && response.data.success) {
         // Update the config status to 'live'
         const index = configs.value.findIndex(c => c._id === configId);
         if (index !== -1) {
@@ -293,13 +291,43 @@ export const useCaddyConfigsStore = defineStore('caddyConfigs', () => {
         
         // Return the response data
         return response.data.data || response.data;
+      } else if (response.data && !response.data.success) {
+        // The API returned a response but indicates failure
+        // Return the error response so the UI can handle it
+        return response.data;
       }
       
       return null;
     } catch (err) {
-      error.value = err.message || `Failed to apply configuration`;
+      // Set a detailed error message
+      let errorMessage = `Failed to apply configuration`;
+      
+      if (err.response && err.response.data) {
+        // If we have detailed error information from the backend, use it
+        if (err.response.data.data && err.response.data.data.failed && err.response.data.data.failed.length > 0) {
+          const failedServer = err.response.data.data.failed[0];
+          errorMessage = failedServer.error || err.response.data.message || errorMessage;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+        
+        // Return the detailed error response for the UI to handle
+        return err.response.data;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      error.value = errorMessage;
       console.error(`Error applying configuration ${configId}:`, err);
-      return null;
+      
+      // Return error information for the UI
+      return {
+        success: false,
+        message: errorMessage,
+        error: err.message
+      };
     } finally {
       isLoading.value = false;
     }

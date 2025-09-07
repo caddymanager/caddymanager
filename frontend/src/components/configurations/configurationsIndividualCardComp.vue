@@ -55,6 +55,7 @@ const deleteError = ref(null)
 const showApplyModal = ref(false)
 const applySuccess = ref(false)
 const applyMessage = ref('')
+const applyError = ref('')
 
 // Custom directive for handling clicks outside an element
 const vClickOutside = {
@@ -122,6 +123,7 @@ const openApplyModal = () => {
 // Handle successful apply
 const handleApplySuccess = (result) => {
   applySuccess.value = true
+  applyError.value = ''
   applyMessage.value = `Configuration applied to ${result.serverIds.length} server(s).`
   emit('apply-success', result)
   
@@ -129,6 +131,17 @@ const handleApplySuccess = (result) => {
   setTimeout(() => {
     applySuccess.value = false
   }, 3000)
+}
+
+// Handle apply error
+const handleApplyError = (errorMessage) => {
+  applyError.value = errorMessage
+  applySuccess.value = false
+  
+  // Auto-hide the error message after a delay
+  setTimeout(() => {
+    applyError.value = ''
+  }, 5000)
 }
 
 // Format badge for status
@@ -333,6 +346,14 @@ const formatDate = (dateString) => {
       >
         {{ applyMessage }}
       </div>
+      
+      <!-- Error message toast -->
+      <div 
+        v-if="applyError" 
+        class="mt-2 py-1.5 px-3 bg-red-100 border border-red-200 rounded text-red-700 text-xs whitespace-pre-line"
+      >
+        {{ applyError }}
+      </div>
     </div>
 
     <!-- Confirmation modal for deletion -->
@@ -352,6 +373,7 @@ const formatDate = (dateString) => {
       v-model="showApplyModal"
       :config="config"
       @success="handleApplySuccess"
+      @error="handleApplyError"
     />
   </li>
 </template>

@@ -1,6 +1,6 @@
 # CaddyManager
 
-Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack (MongoDB, Express, Vue, Node.js).
+Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack with support for both SQLite and MongoDB databases.
 
 > **Caution:** CaddyManager is in early development. Please _backup your Caddy configurations_ and data before testing. Use at your own risk.
 
@@ -11,6 +11,8 @@ Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack
 
 ## 🚀 Features
 
+- **Dual Database Support:**
+  - Choose between SQLite (default, zero-setup) or MongoDB for data storage.
 - **Multi-Server Management:**
   - Add, remove, and monitor multiple Caddy2 servers from a single dashboard.
 - **Configuration Editor:**
@@ -37,11 +39,11 @@ This project is in active development, gearing up for a v0.1 release. Feedback a
 
 ## 🐳 Docker Compose Example
 
-Below is a sample `docker-compose.yml` for running both backend and frontend. Instead of referencing `.env` files, environment variables are listed explicitly for clarity:
+Below is the updated `docker-compose.yml` for running both backend and frontend. CaddyManager uses SQLite by default for zero-configuration setup, but you can optionally use MongoDB:
 
 ```yaml
 services:
-  # MongoDB database for persistent storage
+  # MongoDB database for persistent storage (optional - SQLite is used by default)
   mongodb:
     image: mongo:8.0
     container_name: caddymanager-mongodb
@@ -55,30 +57,35 @@ services:
       - mongodb_data:/data/db
     networks:
       - caddymanager
+    profiles:
+      - mongodb  # Use 'docker-compose --profile mongodb up' to include MongoDB
 
   # Backend API server
   backend:
     image: caddymanager/caddymanager-backend:latest
     container_name: caddymanager-backend
     restart: unless-stopped
-    depends_on:
-      - mongodb
     environment:
       - PORT=3000
+      # Database Engine Configuration (defaults to SQLite)
+      - DB_ENGINE=sqlite  # Options: 'sqlite' or 'mongodb'
+      # SQLite Configuration (used when DB_ENGINE=sqlite)
+      - SQLITE_DB_PATH=/app/data/caddymanager.sqlite
+      # MongoDB Configuration (used when DB_ENGINE=mongodb)
       - MONGODB_URI=mongodb://mongoadmin:someSecretPassword@mongodb:27017/caddymanager?authSource=admin
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=http://localhost:80
       - LOG_LEVEL=debug
-      - DEFAULT_CADDY_ADMIN_USER=admin
-      - DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
       - CADDY_SANDBOX_URL=http://localhost:2019
       - PING_INTERVAL=30000
       - PING_TIMEOUT=2000
       - AUDIT_LOG_MAX_SIZE_MB=100
       - AUDIT_LOG_RETENTION_DAYS=90
+      - METRICS_HISTORY_MAX=1000  # Optional: max number of in-memory metric history snapshots to keep
       - JWT_SECRET=your_jwt_secret_key_here  # Change for production!
       - JWT_EXPIRATION=24h
-    ports:
-      - "3000:3000"  # Expose API
+    # Backend is now only accessible through frontend proxy
+    volumes:
+      - sqlite_data:/app/data  # SQLite database storage
     networks:
       - caddymanager
 
@@ -90,7 +97,7 @@ services:
     depends_on:
       - backend
     environment:
-      - API_BASE_URL=http://backend:3000/api/v1
+      - BACKEND_HOST=backend:3000
       - APP_NAME=Caddy Manager
       - DARK_MODE=true
     ports:
@@ -103,13 +110,16 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
+  mongodb_data:  # Only used when MongoDB profile is active
+  sqlite_data:   # SQLite database storage
 
 # Notes:
+# - SQLite is the default database engine - no additional setup required!
+# - To use MongoDB instead, set DB_ENGINE=mongodb and start with: docker-compose --profile mongodb up
 # - For production, use strong passwords and consider secrets management.
-# - The backend connects to MongoDB using the service name 'mongodb'.
-# - The frontend connects to the backend using the service name 'backend'.
-# - Remove or restrict published ports in production environments.
+# - The backend uses SQLite by default, storing data in a persistent volume.
+# - The frontend proxies all /api/* requests to the backend service.
+# - Backend is not directly exposed - all API access goes through the frontend proxy.
 ```
 
 ---
@@ -133,12 +143,14 @@ Create a `.env` file in the `backend/` directory with the following variables:
 
 ```
 PORT=3000
+# Database Engine Configuration
+DB_ENGINE=sqlite  # Options: 'sqlite' or 'mongodb'
+# SQLite Configuration (used when DB_ENGINE=sqlite)
+SQLITE_DB_PATH=./caddymanager.sqlite
+# MongoDB Configuration (used when DB_ENGINE=mongodb)
 MONGODB_URI=mongodb://mongoadmin:someSecretPassword@localhost:27017/caddymanager?authSource=admin
 CORS_ORIGIN=http://localhost:5173
 LOG_LEVEL=debug
-# Credentials for the Caddy admin endpoint (not CaddyManager login)
-DEFAULT_CADDY_ADMIN_USER=admin
-DEFAULT_CADDY_ADMIN_PASSWORD=caddyrocks
 CADDY_SANDBOX_URL=http://localhost:2019
 PING_INTERVAL=30000
 PING_TIMEOUT=2000
@@ -148,13 +160,15 @@ JWT_SECRET=your_jwt_secret_key_here  # Change for production!
 JWT_EXPIRATION=24h
 ```
 - `PORT`: Port for the backend server.
-- `MONGODB_URI`: MongoDB connection string (update credentials as needed).
+- `DB_ENGINE`: Database engine to use (`sqlite` or `mongodb`). Defaults to `sqlite`.
+- `SQLITE_DB_PATH`: Path to SQLite database file (used when `DB_ENGINE=sqlite`).
+- `MONGODB_URI`: MongoDB connection string (used when `DB_ENGINE=mongodb`).
 - `CORS_ORIGIN`: Allowed origin for frontend requests - should be the url of your frontend.
 - `LOG_LEVEL`: Logging verbosity.
-- `DEFAULT_CADDY_ADMIN_USER` / `DEFAULT_CADDY_ADMIN_PASSWORD`: **Credentials for the Caddy admin endpoint, not for logging into CaddyManager.**
 - `CADDY_SANDBOX_URL`: URL for the Caddy sandbox server (for testing) and/or validating configs.
 - `PING_INTERVAL` / `PING_TIMEOUT`: Health check intervals (ms).
 - `AUDIT_LOG_MAX_SIZE_MB` / `AUDIT_LOG_RETENTION_DAYS`: Audit log settings.
+- `METRICS_HISTORY_MAX`: Optional max number of in-memory metric history snapshots to keep (default: 1000).
 - `JWT_SECRET` / `JWT_EXPIRATION`: JWT credential settings
 
 > **Note:** The default CaddyManager user when first creating the app is `admin` with password `caddyrocks`. You can change this after logging in.
@@ -163,10 +177,56 @@ JWT_EXPIRATION=24h
 
 ---
 
+## 🗄️ Database Options
+
+CaddyManager supports two database engines:
+
+### SQLite (Default)
+- **Zero Configuration**: Works out of the box, no setup required
+- **Single File**: All data stored in a single `.sqlite` file
+- **Perfect for**: Small to medium deployments, development, testing
+- **Automatic Setup**: Creates admin user (`admin`/`caddyrocks`) on first run
+
+### MongoDB
+- **Scalable**: Better for high-traffic, multi-user environments
+- **Perfect for**: Large deployments
+- **Setup Required**: Requires MongoDB server installation
+
+To switch between databases, simply change the `DB_ENGINE` environment variable and restart the backend.
+
+---
+
 ## 📚 Documentation
 - [Caddy Documentation](https://caddyserver.com/docs/)
 - [CaddyManager Docs](https://caddymanager.online/#/docs)
 - [Swagger API Docs](http://localhost:3000/api-docs) (after starting backend)
+
+## 📈 Metrics & Prometheus
+
+This project exposes runtime and application metrics that can be scraped by Prometheus or fetched as JSON for dashboards.
+
+- Prometheus exposition endpoint (text format): `/api/v1/metrics/prometheus`
+- JSON metrics (aggregated): `/api/v1/metrics`
+
+Minimal Prometheus scrape fragment (add under `scrape_configs:` in your `prometheus.yml`):
+
+```yaml
+- job_name: 'caddymanager'
+  metrics_path: /api/v1/metrics/prometheus
+  static_configs:
+    - targets: ['localhost:3000']
+```
+
+Quick test (returns Prometheus text format):
+
+```
+curl http://localhost:3000/api/v1/metrics/prometheus
+```
+
+Notes:
+- The in-memory metric history size is controlled by the `METRICS_HISTORY_MAX` env var (default shown in the Docker Compose example).
+- If you run Prometheus behind a proxy or need auth headers, adjust the scrape job accordingly.
+
 
 ---
 
@@ -177,7 +237,8 @@ Contributions are welcome! Please open issues and pull requests to help improve 
 
 ## 📦 Tech Stack
 - **Frontend:** Vue 3, Vite, Pinia, Vue Router
-- **Backend:** Node.js, Express, MongoDB
+- **Backend:** Node.js, Express
+- **Database:** SQLite (default) or MongoDB
 - **Caddy Integration:** RESTful API for Caddy2 server management
 
 ---
@@ -202,8 +263,9 @@ For local testing with real Caddy servers, see [`development/USAGE.md`](developm
    cd backend && npm install
    cd ../frontend && npm install
    ```
-3. **Configure environment:**
-   - Copy `.env.example` to `.env` in both `backend/` and `frontend/` and update values as needed.
+3. **Configure environment (optional):**
+   - SQLite works out of the box with no configuration needed!
+   - For custom settings, copy `.env.example` to `.env` in both `backend/` and `frontend/` directories
 4. **Run the app:**
    - Start backend:
      ```sh
@@ -213,6 +275,8 @@ For local testing with real Caddy servers, see [`development/USAGE.md`](developm
      ```sh
      cd frontend && npm run dev
      ```
+5. **Login:**
+   - Default admin credentials: `admin` / `caddyrocks`
 
 ---
 
@@ -222,7 +286,7 @@ For local testing with real Caddy servers, see [`development/USAGE.md`](developm
    - Open your browser and go to `http://localhost` (or the address where your frontend is running).
 
 2. **Sign In:**
-   - Log in using the admin credentials you set in your backend `.env` (`DEFAULT_CADDY_ADMIN_USER` / `DEFAULT_CADDY_ADMIN_PASSWORD`).
+   - Log in using the default admin credentials (`admin` / `caddyrocks`).
 
 3. **Add and Manage Servers:**
    - Navigate to the "Servers" section to add, edit, or remove Caddy servers.

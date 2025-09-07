@@ -77,7 +77,10 @@ const deleteLoading = ref(false);
 const deleteError = ref('');
 
 // Computed
-const currentUserId = computed(() => authStore.user?.id);
+const currentUserId = computed(() => {
+  const id = authStore.user?.id;
+  return id ? String(id) : null;
+});
 
 // Lifecycle hooks
 onMounted(async () => {

@@ -1,0 +1,5 @@
+# Minimal Prometheus scrape fragment for Caddy Manager
+- job_name: 'caddymanager'
+  metrics_path: /api/v1/metrics/prometheus
+  static_configs:
+    - targets: ['localhost:3000']

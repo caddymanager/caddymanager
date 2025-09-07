@@ -54,11 +54,10 @@
           <!-- Server Name -->
           <div class="mb-4">
             <label for="name" class="block text-sm font-medium text-tertiary mb-1">Server Name</label>
-            <input 
-              id="name" 
-              v-model="formData.name" 
-              type="text" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="name"
+              v-model="formData.name"
+              type="text"
               required
             />
           </div>
@@ -79,72 +78,43 @@
           <!-- API URL -->
           <div class="mb-4">
             <label for="apiUrl" class="block text-sm font-medium text-tertiary mb-1">API URL</label>
-            <input 
-              id="apiUrl" 
-              v-model="formData.apiUrl" 
-              type="text" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="apiUrl"
+              v-model="formData.apiUrl"
+              type="text"
               required
             />
           </div>
-          
           <!-- API Port -->
           <div class="mb-4">
             <label for="apiPort" class="block text-sm font-medium text-tertiary mb-1">API Port</label>
-            <input 
-              id="apiPort" 
-              v-model.number="formData.apiPort" 
-              type="number" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              placeholder="2019"
+            <InputFieldComp
+              id="apiPort"
+              v-model="formData.apiPort"
+              type="number"
+              placeholder="80"
             />
           </div>
-          
           <!-- Admin API Path -->
           <div class="mb-4">
             <label for="adminApiPath" class="block text-sm font-medium text-tertiary mb-1">Admin API Path</label>
-            <input 
-              id="adminApiPath" 
-              v-model="formData.adminApiPath" 
-              type="text" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="adminApiPath"
+              v-model="formData.adminApiPath"
+              type="text"
               placeholder="/config/"
             />
           </div>
           
-          <!-- HTTP Port -->
-          <div class="mb-4">
-            <label for="httpPort" class="block text-sm font-medium text-tertiary mb-1">HTTP Port</label>
-            <input 
-              id="httpPort" 
-              v-model.number="formData.httpPort" 
-              type="number" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              placeholder="80"
-            />
-          </div>
           
-          <!-- HTTPS Port -->
-          <div class="mb-4">
-            <label for="httpsPort" class="block text-sm font-medium text-tertiary mb-1">HTTPS Port</label>
-            <input 
-              id="httpsPort" 
-              v-model.number="formData.httpsPort" 
-              type="number" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-              placeholder="443"
-            />
-          </div>
 
           <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Server Status</h5>
           
           <!-- Active -->
           <div class="mb-4 flex items-center">
-            <input 
-              id="active" 
-              v-model="formData.active" 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            <CheckboxFieldComp
+              id="active"
+              v-model="formData.active"
             />
             <label for="active" class="ml-2 block text-sm text-tertiary">Active</label>
           </div>
@@ -152,11 +122,10 @@
           <!-- Tags -->
           <div class="mb-4">
             <label for="tags" class="block text-sm font-medium text-tertiary mb-1">Server Tags (comma separated)</label>
-            <input 
-              id="tags" 
-              v-model="tagsInput" 
-              type="text" 
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+            <InputFieldComp
+              id="tags"
+              v-model="tagsInput"
+              type="text"
               placeholder="production, web, europe"
             />
           </div>
@@ -197,20 +166,14 @@
             </div>
             <div class="flex flex-wrap gap-2 py-1">
               <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">API Port</div>
-              <div class="flex-1">{{ server.apiPort || 'Default (2019)' }}</div>
+              <div class="flex-1">{{ server.apiPort || '—' }}</div>
             </div>
+            
             <div class="flex flex-wrap gap-2 py-1">
               <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">Admin API Path</div>
               <div class="flex-1">{{ server.adminApiPath || '/config/' }}</div>
             </div>
-            <div class="flex flex-wrap gap-2 py-1">
-              <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">HTTP Port</div>
-              <div class="flex-1">{{ server.httpPort || 'Default (80)' }}</div>
-            </div>
-            <div class="flex flex-wrap gap-2 py-1">
-              <div class="font-semibold min-w-[120px] text-gray-600 flex-[0_0_30%]">HTTPS Port</div>
-              <div class="flex-1">{{ server.httpsPort || 'Default (443)' }}</div>
-            </div>
+            
           </div>
           
           <h5 class="text-base font-semibold text-gray-600 pb-2 mb-4 border-b border-gray-200">Status Information</h5>
@@ -297,6 +260,8 @@ import { useCaddyServersStore } from '@/stores/caddyServersStore'
 import { ServerIcon, ArrowLeftIcon, PencilIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { RouterLink, useRouter } from 'vue-router'
 import LoadingSpinnerComp from '@/components/util/loadingSpinnerComp.vue'
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import CheckboxFieldComp from '@/components/util/checkboxFieldComp.vue'
 
 const props = defineProps({
   serverId: {
@@ -339,10 +304,8 @@ const formData = ref({
   name: '',
   description: '',
   apiUrl: '',
-  apiPort: 2019,
+  apiPort: '',
   adminApiPath: '/config/',
-  httpPort: null,
-  httpsPort: null,
   active: true,
   tags: []
 })
@@ -357,10 +320,9 @@ watch(server, (newServer) => {
       name: newServer.name || '',
       description: newServer.description || '',
       apiUrl: newServer.apiUrl || '',
-      apiPort: newServer.apiPort || 2019,
+      apiPort: newServer.apiPort || '',
       adminApiPath: newServer.adminApiPath || '/config/',
-      httpPort: newServer.httpPort || null,
-      httpsPort: newServer.httpsPort || null,
+
       active: newServer.active !== undefined ? newServer.active : true,
       tags: newServer.tags || []
     }

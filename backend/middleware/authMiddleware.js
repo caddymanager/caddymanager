@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
-const ApiKey = require('../models/apiKeyModel');
+const userRepository = require('../repositories/userRepository');
+const ApiKey = require('../models/apiKey');
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_for_development';
@@ -51,7 +51,7 @@ exports.protect = async (req, res, next) => {
         }
         
         // Get the user associated with this API key
-        const user = await User.findById(apiKey.userId);
+        const user = await userRepository.findById(apiKey.userId);
         
         if (!user || !user.isActive) {
           return res.status(401).json({
@@ -62,7 +62,7 @@ exports.protect = async (req, res, next) => {
         
         // Add user and API key info to request
         req.user = {
-          id: user._id,
+          id: user.id || user._id,
           username: user.username,
           email: user.email,
           role: user.role,
@@ -78,7 +78,7 @@ exports.protect = async (req, res, next) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         
         // Check if user still exists
-        const user = await User.findById(decoded.id);
+        const user = await userRepository.findById(decoded.id);
         
         if (!user) {
           return res.status(401).json({
@@ -96,7 +96,7 @@ exports.protect = async (req, res, next) => {
         
         // Add user to request
         req.user = {
-          id: user._id,
+          id: user.id || user._id,
           username: user.username,
           email: user.email,
           role: user.role,

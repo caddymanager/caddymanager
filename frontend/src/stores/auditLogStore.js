@@ -67,6 +67,13 @@ export const useAuditLogStore = defineStore('auditLog', {
         this.currentAuditLog = response.auditLog;
         return response.auditLog;
       } catch (error) {
+        // If the server returns 404 (not found), treat it as a graceful missing resource
+        if (error && error.response && error.response.status === 404) {
+          console.warn(`Audit log ${id} not found (404)`);
+          this.currentAuditLog = null;
+          this.error = 'Not found';
+          return null;
+        }
         console.error(`Error fetching audit log ${id}:`, error);
         this.error = error.message || 'Failed to fetch audit log details';
         throw error;

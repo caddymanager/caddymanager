@@ -18,13 +18,12 @@
 
         <!-- Configuration Name -->
         <div class="mb-4">
-          <label for="name" class="block text-sm font-medium text-tertiary mb-1">Configuration Name</label>
-          <input 
-            id="name" 
-            v-model="formData.name" 
-            type="text" 
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          <InputFieldComp
+            id="name"
+            v-model="formData.name"
+            label="Configuration Name"
             placeholder="My Configuration"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             required
           />
         </div>
@@ -35,7 +34,7 @@
           <textarea 
             id="description" 
             v-model="formData.metadata.description"
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            class="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             placeholder="Description of this configuration"
             rows="3"
           ></textarea>
@@ -43,41 +42,35 @@
         
         <!-- Version -->
         <div class="mb-4">
-          <label for="version" class="block text-sm font-medium text-tertiary mb-1">Version</label>
-          <input 
-            id="version" 
-            v-model="formData.metadata.version" 
-            type="text" 
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          <InputFieldComp
+            id="version"
+            v-model="formData.metadata.version"
+            label="Version"
             placeholder="1.0.0"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
         </div>
 
         <!-- Tags -->
         <div class="mb-4">
-          <label for="tags" class="block text-sm font-medium text-tertiary mb-1">Tags (comma separated)</label>
-          <input 
-            id="tags" 
-            v-model="tagsInput" 
-            type="text" 
-            class="placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          <InputFieldComp
+            id="tags"
+            v-model="tagsInput"
+            label="Tags (comma separated)"
             placeholder="production, website, api"
+            extraClass="text-gray-900 placeholder:text-gray-300 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
           />
         </div>
 
         <!-- Server Selection -->
         <div class="mb-4">
-          <label for="server" class="block text-sm font-medium text-tertiary mb-1">Target Server (Optional)</label>
-          <select 
-            id="server" 
+          <SelectFieldComp
+            id="server"
             v-model="formData.serverId"
-            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          >
-            <option value="">No specific server</option>
-            <option v-for="server in servers" :key="server._id" :value="server._id">
-              {{ server.name }}
-            </option>
-          </select>
+            :options="[{ value: '', label: 'No specific server' }, ...(servers.map(s => ({ value: s._id, label: s.name })))]"
+            label="Target Server (Optional)"
+            extraClass="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          />
           <p class="mt-1 text-xs text-gray-500">Select a server if this configuration is meant for a specific deployment target.</p>
         </div>
       </form>
@@ -90,6 +83,8 @@ import { computed, ref, watch } from 'vue'
 import { useCaddyServersStore } from '@/stores/caddyServersStore'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
 import { useNotification } from "@kyvg/vue3-notification"
+import InputFieldComp from '@/components/util/inputFieldComp.vue'
+import SelectFieldComp from '@/components/util/selectFieldComp.vue'
 
 const emit = defineEmits(['details-updated'])
 

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
+const userRepository = require('../repositories/userRepository');
 const auditService = require('../services/auditService');
 
 // Environment variables - should be properly configured in production
@@ -19,7 +19,7 @@ exports.login = async (req, res) => {
     const { username, password } = req.body;
 
     // Check if user exists with password field selected
-    const user = await User.findOne({ username }).select('+password');
+    const user = await userRepository.findByUsername(username, { includePassword: true });
     if (!user) {
       // Log failed login attempt
       await auditService.logAction({
@@ -43,14 +43,14 @@ exports.login = async (req, res) => {
     }
 
     // Check if password is correct
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await userRepository.comparePassword(password, user.password);
     if (!isMatch) {
       // Log failed login attempt with invalid password
       await auditService.logAction({
         action: 'login_failed',
-        user: { username: username, id: user._id },
+        user: { username: username, id: user.id || user._id },
         resourceType: 'user',
-        resourceId: user._id,
+        resourceId: user.id || user._id,
         details: {
           reason: 'Invalid password',
           username: username
@@ -67,18 +67,17 @@ exports.login = async (req, res) => {
     }
 
     // Update last login time
-    user.lastLogin = Date.now();
-    await user.save();
+    const updatedUser = await userRepository.updateLastLogin(user.id || user._id, new Date());
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id || user._id);
 
     // Log successful login
     await auditService.logAction({
       action: 'login_success',
       user: user,
       resourceType: 'user',
-      resourceId: user._id,
+      resourceId: user.id || user._id,
       details: {
         username: user.username
       },
@@ -92,11 +91,11 @@ exports.login = async (req, res) => {
       success: true,
       token,
       user: {
-        id: user._id,
+        id: user.id || user._id,
         username: user.username,
         email: user.email,
         role: user.role,
-        lastLogin: user.lastLogin
+        lastLogin: updatedUser ? updatedUser.lastLogin : new Date()
       }
     });
   } catch (error) {
@@ -111,7 +110,7 @@ exports.login = async (req, res) => {
 // Get current user profile
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await userRepository.findById(req.user.id);
     
     if (!user) {
       return res.status(404).json({
@@ -123,7 +122,7 @@ exports.getCurrentUser = async (req, res) => {
     res.status(200).json({
       success: true,
       user: {
-        id: user._id,
+        id: user.id || user._id,
         username: user.username,
         email: user.email,
         role: user.role,
@@ -148,12 +147,9 @@ exports.updateProfile = async (req, res) => {
     
     // If username is provided, check if it's already taken
     if (username) {
-      const existingUser = await User.findOne({ 
-        username, 
-        _id: { $ne: req.user.id } 
-      });
+      const usernameExists = await userRepository.isUsernameExists(username, req.user.id);
       
-      if (existingUser) {
+      if (usernameExists) {
         return res.status(400).json({
           success: false,
           message: 'Username already exists'
@@ -165,12 +161,9 @@ exports.updateProfile = async (req, res) => {
     
     // If email is provided, check if it's already taken
     if (email) {
-      const existingEmail = await User.findOne({ 
-        email, 
-        _id: { $ne: req.user.id } 
-      });
+      const emailExists = await userRepository.isEmailExists(email, req.user.id);
       
-      if (existingEmail) {
+      if (emailExists) {
         return res.status(400).json({
           success: false,
           message: 'Email already in use'
@@ -180,7 +173,7 @@ exports.updateProfile = async (req, res) => {
       updateData.email = email;
     }
     
-    const user = await User.findByIdAndUpdate(
+    const user = await userRepository.findByIdAndUpdate(
       req.user.id,
       updateData,
       { new: true, runValidators: true }
@@ -198,7 +191,7 @@ exports.updateProfile = async (req, res) => {
       action: 'update_profile',
       user: req.user,
       resourceType: 'user',
-      resourceId: user._id,
+      resourceId: user.id || user._id,
       details: {
         updates: updateData
       },
@@ -210,7 +203,7 @@ exports.updateProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       user: {
-        id: user._id,
+        id: user.id || user._id,
         username: user.username,
         email: user.email,
         role: user.role,
@@ -232,7 +225,7 @@ exports.changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     
     // Find user with password
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await userRepository.findById(req.user.id, { includePassword: true });
     
     if (!user) {
       return res.status(404).json({
@@ -242,7 +235,7 @@ exports.changePassword = async (req, res) => {
     }
     
     // Verify current password
-    const isMatch = await user.comparePassword(currentPassword);
+    const isMatch = await userRepository.comparePassword(currentPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -251,15 +244,14 @@ exports.changePassword = async (req, res) => {
     }
     
     // Update password
-    user.password = newPassword;
-    await user.save();
+    await userRepository.findByIdAndUpdate(user.id || user._id, { password: newPassword });
     
     // Log password change
     await auditService.logAction({
       action: 'change_password',
       user: req.user,
       resourceType: 'user',
-      resourceId: user._id,
+      resourceId: user.id || user._id,
       details: {
         passwordChanged: true
       },
@@ -284,7 +276,7 @@ exports.changePassword = async (req, res) => {
 // Admin: Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-__v');
+    const users = await userRepository.findAll();
     
     res.status(200).json({
       success: true,
@@ -312,7 +304,7 @@ exports.updateUserRole = async (req, res) => {
       });
     }
     
-    const user = await User.findByIdAndUpdate(
+    const user = await userRepository.findByIdAndUpdate(
       userId,
       { role },
       { new: true, runValidators: true }
@@ -330,7 +322,7 @@ exports.updateUserRole = async (req, res) => {
       action: 'update_user_role',
       user: req.user,
       resourceType: 'user',
-      resourceId: user._id,
+      resourceId: user.id || user._id,
       details: {
         username: user.username,
         newRole: role,
@@ -368,8 +360,8 @@ exports.createUser = async (req, res) => {
     }
 
     // Check if username already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
+    const usernameExists = await userRepository.isUsernameExists(username);
+    if (usernameExists) {
       return res.status(400).json({
         success: false,
         message: 'Username already exists'
@@ -378,9 +370,7 @@ exports.createUser = async (req, res) => {
 
     // Only check for duplicate emails if an email is provided and not empty
     if (email && email.trim() !== '') {
-      const emailExists = await User.findOne({ 
-        email: email.trim().toLowerCase() 
-      });
+      const emailExists = await userRepository.isEmailExists(email.trim().toLowerCase());
       
       if (emailExists) {
         return res.status(400).json({
@@ -404,14 +394,14 @@ exports.createUser = async (req, res) => {
     }
 
     // Create the user
-    const user = await User.create(userData);
+    const user = await userRepository.create(userData);
 
     // Log user creation
     await auditService.logAction({
       action: 'create_user',
       user: req.user,
       resourceType: 'user',
-      resourceId: user._id,
+      resourceId: user.id || user._id,
       details: {
         username: user.username,
         role: user.role,
@@ -425,7 +415,7 @@ exports.createUser = async (req, res) => {
     res.status(201).json({
       success: true,
       user: {
-        id: user._id,
+        id: user.id || user._id,
         username: user.username,
         email: user.email,
         role: user.role,
@@ -447,8 +437,8 @@ exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Prevent deletion of own account
-    if (userId === req.user.id) {
+    // Prevent deletion of own account - convert both to strings for comparison
+    if (userId.toString() === req.user.id.toString()) {
       return res.status(400).json({
         success: false,
         message: 'Cannot delete your own account'
@@ -456,7 +446,7 @@ exports.deleteUser = async (req, res) => {
     }
 
     // Find the user to check if they exist
-    const userToDelete = await User.findById(userId);
+    const userToDelete = await userRepository.findById(userId);
     
     if (!userToDelete) {
       return res.status(404).json({
@@ -481,7 +471,7 @@ exports.deleteUser = async (req, res) => {
     });
 
     // Delete the user
-    await User.findByIdAndDelete(userId);
+    await userRepository.findByIdAndDelete(userId);
 
     res.status(200).json({
       success: true,
