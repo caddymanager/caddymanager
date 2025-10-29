@@ -43,7 +43,7 @@ router.use(`${API_PREFIX}/convert`, convertRoutes);
 router.use(`${API_PREFIX}/auth`, authRoutes);
 
 // Mount API Key routes
-router.use(`${API_PREFIX}/apikeys`, apiKeyRoutes);
+router.use(`${API_PREFIX}/keys`, apiKeyRoutes);
 
 // Mount Audit Log routes
 router.use(`${API_PREFIX}/audit-logs`, auditLogRoutes);
