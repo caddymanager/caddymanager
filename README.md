@@ -2,7 +2,8 @@
 
 Easily manage your Caddy2 servers using a modern web UI, built on the MEVN stack with support for both SQLite and MongoDB databases.
 
-> **Caution:** CaddyManager is in early development. Please _backup your Caddy configurations_ and data before testing. Use at your own risk.
+>[!WARNING]
+> CaddyManager is in early development. Please _backup your Caddy configurations_ and data before testing. Use at your own risk.
 
 
 ---
