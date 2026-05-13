@@ -130,13 +130,15 @@ volumes:
 Create a `.env` file in the `frontend/` directory with the following variables:
 
 ```
-API_BASE_URL=http://localhost:3000/api/v1
-APP_NAME=Caddy Manager
-DARK_MODE=true
+VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_APP_TITLE=Caddy Manager
+VITE_ENABLE_DARK_MODE=true
 ```
-- `API_BASE_URL`: The base URL for backend API requests - should be the url for your backend api
-- `APP_NAME`: The display name for the app UI.
-- `DARK_MODE`: Set to `true` to enable dark mode by default. Currently not integrated fully.
+- `VITE_API_BASE_URL`: The base URL for backend API requests - should be the url for your backend api.
+- `VITE_APP_TITLE`: The display name for the app UI.
+- `VITE_ENABLE_DARK_MODE`: Set to `true` to enable dark mode by default. Currently not integrated fully.
+
+When running the published frontend Docker image, these values are served by the container's `/config` endpoint. In that mode, use `APP_NAME`, `DARK_MODE`, and `BACKEND_HOST` as shown in the Docker Compose example above.
 
 ### Backend (`backend/.env`)
 Create a `.env` file in the `backend/` directory with the following variables:
